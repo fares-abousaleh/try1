@@ -1,4 +1,5 @@
 // JavaScript Document
+//--- modified
 onmousemove = draw;     
     function draw(e) {
       var canvas = document.getElementById("canvas");
