@@ -281,10 +281,19 @@ function newTex(image){
 var aspectRatio,
     World={},
 	Camera={},
-	CollisionBlocks=[]
-	Map=[]
+	CollisionBlocks=[],
+	WorldN = 40,
+	Map =[] ,
+	blkW,blkH
+
+
 	
 function initWorld(width,height){
+	for(let y=0;y<WorldN;y++){
+		Map.push( new Array( WorldN ))
+		for(let x=0;x<WorldN;x++)
+			Map[y][x]=0
+    }
 	aspectRatio = can.height *1.0/ can.width
 	World.width = width
 	World.height = height
@@ -297,16 +306,22 @@ function initWorld(width,height){
 	Camera.maxX = World.hWidth  - Camera.w
 	Camera.maxY = World.hHeight - Camera.h
 	
+	blkW  = World.hWidth *2.0/WorldN
+    blkH = World.hHeight*2.0/WorldN
 	//-- create collision blocks
-	for(let k=0;k<40;k++){
+	for(let k=0;k<50;k++){
+		let kx = rndInt(0,WorldN/2)
+		let ky = rndInt(0,WorldN/2)
+		
 		let p = new Sprite(
-			Math.round(rnd(World.hWidth)/0.3)*0.3,
-			Math.round(rnd(World.hHeight)/0.3)*0.3,
-			0.3,0.3,[0.5,0.5,0.75,0.75]
+			kx*blkW-World.hWidth+blkW/2,
+			ky*blkH-World.hHeight+blkH/2,
+			blkW,blkH,[0.5,0.5,0.75,0.75]
 		)
 		p.color=[1,0.9,0.5,1]
 		p.th=0
 		CollisionBlocks.push( p )	
+		Map[ky][kx]=1
 	}
 }
 
@@ -326,6 +341,12 @@ function updateCamera(player)
 	
 	Camera.x = sat( Camera.x, -Camera.maxX,Camera.maxX)
 	Camera.y = sat( Camera.y, -Camera.maxY,Camera.maxY)
+}
+
+function map(x,y){
+	if(x<0||x>=WorldN||y<0||y>=WorldN)return 1
+	 
+	return Map[y][x]
 }
 
 function Sprite(x,y,w,h,tx){
@@ -358,11 +379,67 @@ function Sprite(x,y,w,h,tx){
 		return (this.distTo(sp)<(sp.width+this.width)*0.5)
 	}
 	
-	this.checkCollision=function(){
-		for(let k=0;k<CollisionBlocks.length;k++)
-			if(this.collides(CollisionBlocks[k]))
-					return CollisionBlocks[k]
-		return undefined
+	this.checkCollision=function(newx,newy){
+		let kx = Math.floor((this.x+World.hWidth) / blkW )
+		let ky = Math.floor((this.y+World.hHeight) / blkH )
+		let xx = kx*blkW-World.hWidth+blkW/2
+		let yy = ky*blkH-World.hHeight+blkH/2
+		
+		if(this.vx>= 0 && this.vy>= 0){
+		   if((map(kx+1,ky)!=0||map(kx+1,ky+1)!=0))
+		   {
+			   newx=Math.min(newx,xx)
+			   this.vx=0
+		   }else
+		   if(map(kx,ky+1)!=0 ||map(kx+1,ky+1)!=0 )
+		   {
+			   newy=Math.min(newy,yy)
+			   this.vy =0
+		   }
+		}
+		else 	
+		if(this.vx<= 0 && this.vy<= 0){
+		   if( map(kx-1,ky)!=0||map(kx-1,ky-1)!=0 )
+		   {
+			   newx=Math.max(newx,xx)
+			   this.vx=0
+		   }else
+		   if( map(kx,ky-1)!=0 ||map(kx-1,ky-1)!=0)
+		   {
+			   newy=Math.max(newy,yy)
+			   this.vy=0
+		   }
+		}
+		
+		if(this.vx>= 0 && this.vy<= 0){
+		   if( map(kx+1,ky)!=0||map(kx+1,ky-1)!=0 )
+		   {
+			   newx=Math.min(newx,xx)
+			   this.vx=0
+		   }
+		   else
+		   if( map(kx,ky-1)!=0 ||map(kx+1,ky-1)!=0)
+		   {
+			   newy=Math.max(newy,yy)
+			   this.vy =0
+		   }
+		}
+		else 	
+		if(this.vx<= 0 && this.vy>= 0){
+		   if( map(kx-1,ky)!=0||map(kx-1,ky+1)!=0 )
+		   {
+			   newx=Math.max(newx,xx)
+			   this.vx=0
+		   }else
+		   if(map(kx,ky+1)!=0 ||map(kx-1,ky+1)!=0)
+		   {
+			   newy=Math.min(newy,yy)
+			   this.vy=0
+		   }
+		}
+			
+		this.x = newx
+		this.y = newy
 	}
 		
 }
@@ -551,15 +628,10 @@ function drawScene (time){
 			 
 				sp[k].vx+=sp[k].ax*dt
 				sp[k].vy+=sp[k].ay*dt
-				sp[k].x+=sp[k].vx*dt
-				sp[k].y+=sp[k].vy*dt
-				let bb = sp[k].checkCollision()
-				if(undefined!=bb){
-				   sp[k].ax+=0.1*(sp[k].x-bb.x)
-				   sp[k].ay+=0.1*(sp[k].y-bb.y)
-				   sp[k].vx*=0.5
-				sp[k].vy*=0.5
-				}
+				let sx = sp[k].x+ sp[k].vx*dt
+				let sy = sp[k].y+ sp[k].vy*dt
+				 sp[k].checkCollision(sx,sy)
+				 
 				sp[k].vx*=0.993
 				sp[k].vy*=0.993
 			 
@@ -607,21 +679,20 @@ function drawScene (time){
 			}
 			 
 			
-			let oldx = sp[0].x
-			let oldy = sp[0].y
 			 
-			sp[0].x+= 0.6* sp[0].vx
-			sp[0].y+= 0.6* sp[0].vy
+			 
+			let newx = sp[0].x+  0.6* sp[0].vx
+			let newy = sp[0].y+  0.6* sp[0].vy
 			
-			let bb = sp[0].checkCollision()
-			
-		    if(bb!=undefined){
-				let p = sp[0]
-				p.vx += 0.01 *(oldx+rnd(0.01)-p.x)
-				p.vy += 0.01 *(oldy+rnd(0.01)-p.y)
-				p.x  -= 0.29*(p.x-Math.round(oldx/bb.width) *bb.width)
-				p.y  -= 0.29*(p.y-Math.round(oldy/bb.height)*bb.height)
-			}
+			  sp[0].checkCollision(newx,newy)
+			 
+		    // if(bb!=undefined){
+				// let p = sp[0]
+				// p.vx += 0.01 *(oldx+rnd(0.01)-p.x)
+				// p.vy += 0.01 *(oldy+rnd(0.01)-p.y)
+				// p.x  -= 0.29*(p.x-Math.round(oldx/bb.width) *bb.width)
+				// p.y  -= 0.29*(p.y-Math.round(oldy/bb.height)*bb.height)
+			// }
 			
 			sp[0].detectWorldEdge()
 			sp[0].vx*=0.993 
