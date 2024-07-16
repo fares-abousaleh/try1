@@ -149,6 +149,14 @@ function sat(v,a,b){
 	return v
 }
 
+//-- rects has center (x,y) and half dims: w,h 
+function intersectRects(A,B){
+	let res = (A.x-A.w >= B.x+B.w)||  // B:::A
+	          (B.x-B.w >= A.x+A.w)||  // A:::B
+			  (A.y-A.h >= B.y+B.h)||  // A / B
+	          (B.y-B.h >= A.y+A.h)   // B / A  
+    return !res			  
+}
 
 const vertexShader = 
 `
@@ -228,7 +236,7 @@ var vArr, tArr, cArr
 	
 	//--------------------------------
 	function initGL(){
-		initWorld(6,6)
+		
 		can.oncontextmenu = function(){return false} 
 		ctx = can.getContext("webgl");
         ctx.enable(ctx.BLEND);
@@ -281,19 +289,14 @@ function newTex(image){
 var aspectRatio,
     World={},
 	Camera={},
-	CollisionBlocks=[],
-	WorldN = 40,
-	Map =[] ,
-	blkW,blkH
+	CollisionBlocks=[] 
+ 
+	 
 
 
 	
 function initWorld(width,height){
-	for(let y=0;y<WorldN;y++){
-		Map.push( new Array( WorldN ))
-		for(let x=0;x<WorldN;x++)
-			Map[y][x]=0
-    }
+	 
 	aspectRatio = can.height *1.0/ can.width
 	World.width = width
 	World.height = height
@@ -301,27 +304,24 @@ function initWorld(width,height){
 	World.hHeight = height/2
 	Camera.x = 0
 	Camera.y = 0
-	Camera.w = 0.5
+	Camera.w = 0.3
 	Camera.h = Camera.w * aspectRatio
 	Camera.maxX = World.hWidth  - Camera.w
 	Camera.maxY = World.hHeight - Camera.h
 	
-	blkW  = World.hWidth *2.0/WorldN
-    blkH = World.hHeight*2.0/WorldN
+	 
+	
 	//-- create collision blocks
-	for(let k=0;k<50;k++){
-		let kx = rndInt(0,WorldN/2)
-		let ky = rndInt(0,WorldN/2)
-		
+	for(let k=0;k<13;k++){
 		let p = new Sprite(
-			kx*blkW-World.hWidth+blkW/2,
-			ky*blkH-World.hHeight+blkH/2,
-			blkW,blkH,[0.5,0.5,0.75,0.75]
+		     rnd(World.hWidth),rnd(World.hHeight),
+			rnd(0.3,1),rnd(0.3,1),
+			[0.5,0.5,0.75,0.75]
 		)
 		p.color=[1,0.9,0.5,1]
 		p.th=0
 		CollisionBlocks.push( p )	
-		Map[ky][kx]=1
+		 
 	}
 }
 
@@ -359,6 +359,8 @@ function Sprite(x,y,w,h,tx){
 	this.ay = 0
 	this.width = w
 	this.height = h
+	this.w = w/2
+	this.h = h/2
 	this.color = [1,1,1,1]
 	this.th = rnd(Math.PI)
 	
@@ -380,68 +382,34 @@ function Sprite(x,y,w,h,tx){
 	}
 	
 	this.checkCollision=function(newx,newy){
-		let kx = Math.floor((this.x+World.hWidth) / blkW )
-		let ky = Math.floor((this.y+World.hHeight) / blkH )
-		let xx = kx*blkW-World.hWidth+blkW/2
-		let yy = ky*blkH-World.hHeight+blkH/2
 		
-		if(this.vx>= 0 && this.vy>= 0){
-		   if((map(kx+1,ky)!=0||map(kx+1,ky+1)!=0))
-		   {
-			   newx=Math.min(newx,xx)
-			   this.vx=0
-		   }else
-		   if(map(kx,ky+1)!=0 ||map(kx+1,ky+1)!=0 )
-		   {
-			   newy=Math.min(newy,yy)
-			   this.vy =0
-		   }
-		}
-		else 	
-		if(this.vx<= 0 && this.vy<= 0){
-		   if( map(kx-1,ky)!=0||map(kx-1,ky-1)!=0 )
-		   {
-			   newx=Math.max(newx,xx)
-			   this.vx=0
-		   }else
-		   if( map(kx,ky-1)!=0 ||map(kx-1,ky-1)!=0)
-		   {
-			   newy=Math.max(newy,yy)
-			   this.vy=0
-		   }
-		}
-		
-		if(this.vx>= 0 && this.vy<= 0){
-		   if( map(kx+1,ky)!=0||map(kx+1,ky-1)!=0 )
-		   {
-			   newx=Math.min(newx,xx)
-			   this.vx=0
-		   }
-		   else
-		   if( map(kx,ky-1)!=0 ||map(kx+1,ky-1)!=0)
-		   {
-			   newy=Math.max(newy,yy)
-			   this.vy =0
-		   }
-		}
-		else 	
-		if(this.vx<= 0 && this.vy>= 0){
-		   if( map(kx-1,ky)!=0||map(kx-1,ky+1)!=0 )
-		   {
-			   newx=Math.max(newx,xx)
-			   this.vx=0
-		   }else
-		   if(map(kx,ky+1)!=0 ||map(kx-1,ky+1)!=0)
-		   {
-			   newy=Math.min(newy,yy)
-			   this.vy=0
-		   }
+		for(let i=0;i<CollisionBlocks.length;i++){
+			let c = CollisionBlocks[i]
+			let rh={x:newx,y:this.y,w:this.w,h:this.h}
+		    
+			let k=0
+			//if(this.vx!=0)
+			while(k<10&&intersectRects(rh,c)){
+				rh.x-=Math.sign(this.vx)*0.01
+				k++
+				newx=rh.x
+			}
+			
+			let rv={x:this.x,y:newy,w:this.w,h:this.h}
+			k=0
+			//if(this.vy!=0)
+			while(k<10&&intersectRects(rv,c)){
+				rv.y-=Math.sign(this.vy)*0.01
+				k++
+				newy=rv.y
+			}
+			
 		}
 			
-		this.x = newx
-		this.y = newy
+		this.x= newx
+		this.y= newy
 	}
-		
+
 }
 
 //--------------------------------------------
@@ -451,6 +419,8 @@ function Sprite(x,y,w,h,tx){
 function addSpriteToBuf(sprite){
 	let x = sprite.x - Camera.x
 	let y = sprite.y - Camera.y
+	if(x-sprite.width>1||x+sprite.width<-1
+	   ||y+sprite.height<-1||y-sprite.height>1)return
 	let w = sprite.width *0.5
 	let h = sprite.height*0.5
 	let c = Math.cos(sprite.th )  
@@ -571,7 +541,7 @@ const sp=[]
 	]	
 // ** Init Globals
 function initData(){
-		
+	initWorld(7,7)	
 	//------- create buffers & texture
 	vbuf = newBuffer("a_Position",2); // 2 coordinates per vertex
 	cbuf = newBuffer("color",4); // 4 color components per vertex
@@ -581,26 +551,30 @@ function initData(){
 	
 	
 	//-- create player sprite
-	sp.push( 
-	   new Sprite(  rnd(World.hWidth),
+	let	pl = new Sprite(  rnd(World.hWidth),
 					rnd(World.hHeight),
-		            0.45,0.35,
+		            0.2,0.2,
 					txPos[4] 
-				  ) 
-			);
+				  )
+				  
+	sp.push( pl )
+	
+	
 	//-- create enemies sprites		
-	for(let k=1;k<50;k++)
+	for(let k=1;k<80;k++){
 		sp.push( 
 	      new Sprite(
 		      rnd(World.hWidth),
 			  rnd(World.hHeight),
-		      0.45,0.35,
+		      0.2,0.2,
 			  txPos[rndInt(0,3)]
 			  )
 		)
+		sp[k].frq=rnd(1,2)
+	}
 	
 	//-- background	sprite
-	sp.push( new Sprite(0,0,6,6,txPos[3]))    
+	sp.push( new Sprite(0,0,World.hWidth*2,World.hHeight*2,txPos[3]))    
 	sp[sp.length-1].th = 0
 
 }
@@ -636,7 +610,7 @@ function drawScene (time){
 				sp[k].vy*=0.993
 			 
 			sp[k].detectWorldEdge()
-			const rr =  0.3*(1.0+0.23*Math.sin(time*0.008))
+			const rr =  0.3*(1.0+0.23*Math.sin(sp[k].frq*time*0.008))
 			sp[k].width= rr
 			sp[k].height=0.093/rr 
 			sp[k].th+=dt*rnd(0.9,1.6)
@@ -644,22 +618,20 @@ function drawScene (time){
 		}
 		
 		if(Mouse.btn>0){
-			sp[0].ax = ( Mouse.x-sp[0].x )
-			sp[0].ay = ( Mouse.y-sp[0].y )
-			let v = Math.pow(sp[0].ax*sp[0].ax +sp[0].ay *sp[0].ay,0.5)
-			if(v>0){
-				v=0.03/v
-				sp[0].ax *=v
-				sp[0].ay *=v
-			}
-			sp[0].vx+=sp[0].ax
-			sp[0].vy+=sp[0].ay
+			sp[0].vx += 3*dt*( Mouse.x-sp[0].x )
+			sp[0].vy += 3*dt*( Mouse.y-sp[0].y )
 			Mouse.btn-=1
 		}else{
-		 sp[0].vx += 0.0005*(Key.right-Key.left) 
-		 sp[0].vy += 0.0005*(Key.up-Key.down) 
+		 sp[0].vx += 0.0015*(Key.right-Key.left) 
+		 sp[0].vy += 0.0015*(Key.up-Key.down) 
 		}
-		
+		const maxV = 0.05
+		let v = Math.pow(sp[0].vx*sp[0].vx +sp[0].vy *sp[0].vy,0.5)
+			if(v>maxV){
+				v=maxV/v
+				sp[0].vx *=v
+				sp[0].vy *=v
+			}
 			sp[0].th =  Math.PI+ Math.atan2(sp[0].vy,sp[0].vx)  
 			
 			 
