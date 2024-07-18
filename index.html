@@ -12,6 +12,8 @@
 		h1
 {
 	font-size:5em;
+	background: blue;
+	color:white;
 }
 
 body
@@ -38,18 +40,18 @@ p
 #results 
 {
 	position: absolute;
-	left: 40px;
-	top: 40px;
-	font-size:2.5em;
-	color:white;
+	left: 5px;
+	top: 5px;
+	font-size:2em;
+	color:yellow;
 }
-#mousepos 
+#results1 
 {
 	position: absolute;
-	left: 100px;
-	top: 300px;
-	font-size:3em;
-	color:white;
+	left: 5px;
+	top:  30px;
+	font-size:2em;
+	color:yellow;
 } </style>
 	</head>
 	
@@ -64,7 +66,7 @@ p
 		<div id="container">
         <canvas id="can" width="320" height="180" style="background:black;" ></canvas>
         <span id="results"></span>
-		<span id="mousepos"></span>
+		<span id="results1"></span>
         </div>     
   </body>
 
@@ -129,7 +131,7 @@ var audio_context = undefined
 var snd = makeSound(500)
 
 function playSnd(buf){
-  initAudio()
+  if(audio_context==undefined) return
   var source  = audio_context.createBuffer(1,buf.length,rate);
   source.copyToChannel(buf,0,0);
   var oup = audio_context.createBufferSource();
@@ -156,7 +158,7 @@ function makeSound(fr){
 
 function initAudio(){
 	if(!audio_context) audio_context = new AudioContext();
-}
+} 
 let image = { 
  width: 512,
  height: 512,
@@ -474,21 +476,22 @@ var showFPS = false
 
 window.addEventListener('mousedown',
   function(e){
+  initAudio()	  
   console.log(e);
 	if(!animOn){
 		animOn=true
 		requestAnimationFrame(drawScene);
-		fullScreen(can)
-		if(snd==undefined)snd = makeSound()
+		fullScreen(container)
+		if(snd==undefined)snd = makeSound(600)
 	}
-    //if(snd)playSnd(snd)
+    
 	Mouse.x= -1+(e.x-can.offsetLeft) * 2.0/can.clientWidth
 	Mouse.y=  can.clientHeight* 1.0/can.clientWidth -(e.y-can.offsetTop) * 2.0/can.clientWidth 
 	Mouse.x += Camera.x
 	Mouse.y += Camera.y
 	Mouse.btn += 1
 	showFPS = (e.buttons!=1)
-	//mousepos.innerHTML="x:"+Mouse.x+"  y:"+Mouse.y;
+	
   }
 );
 
@@ -500,9 +503,11 @@ var Key={
 	
 }
 
+ 
+  
 window.addEventListener('keydown',
   function(e){
-	mousepos.innerHTML="key:"+e.key;
+	 
 	
 	switch(e.key){
 		case 'ArrowLeft':Key.left=1
@@ -513,6 +518,8 @@ window.addEventListener('keydown',
 		break
 		case 'ArrowDown':Key.down=1
 		break
+		case ' ': animOn=!animOn
+		break
       }
   }
 )
@@ -520,7 +527,7 @@ window.addEventListener('keydown',
 
 window.addEventListener('keyup',
   function(e){
-	mousepos.innerHTML="key:"+e.key;
+	 
 	
 	switch(e.key){
 		case 'ArrowLeft':Key.left=0
@@ -535,7 +542,7 @@ window.addEventListener('keyup',
   }
 )
 // ** Globals
-
+var playerLife = 1000
 var animOn = false;
 var then = 0, prevSnd=0; 
 const sp=[]
@@ -632,6 +639,7 @@ function drawScene (time){
 			{
 				if(time>prevSnd+100){
 					playSnd(snd)
+					playerLife--
 					prevSnd=time
 				}
 					
@@ -700,10 +708,11 @@ function drawScene (time){
         
     
         if(animOn){
-            if(showFPS)
-				results.innerHTML ="fps:"+ Math.round(1.0/(dt+0.000001));
-			else results.innerHTML =""
-             requestAnimationFrame(drawScene);
+            //if(showFPS)
+			results.innerHTML ="fps:"+ Math.round(1.0/(dt+0.0001));
+			//else results.innerHTML =""
+			results1.innerHTML="life:"+playerLife
+            requestAnimationFrame(drawScene);
         }else results.innerHTML="Click To Start";
 }
 
