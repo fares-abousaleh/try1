@@ -1,3 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<!-------------------
+
+	** Styles
+
+ -------------------->
+ 
+	<head>
+	<style>
+		h1
+{
+	font-size:5em;
+	background: blue;
+	color:white;
+}
+
+body
+{
+	font-size:100%;
+}
+
+canvas
+{
+	width:100%;
+	margin:0;
+}
+
+input 
+{
+	font-size:1.5em;
+}
+
+p
+{
+	font-size:1.3em;
+	color:blue;
+}
+
+#results 
+{
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	font-size:1.3em;
+	color:yellow;
+}
+#results1 
+{
+	position: absolute;
+	left: 10px;
+	top:  35px;
+	font-size:1.3em;
+	color:yellow;
+} </style>
+	</head>
+	
+<!-------------------
+
+	** Body
+
+ -------------------->
+ 	
+	<body onload="document.body.removeChild(document.getElementById('waitmessage')); initGL();initData();requestAnimationFrame(drawScene);">
+        <h1 id="waitmessage"> LOADING PLEASE WAIT ...</h1> 
+		<div id="container">
+        <canvas id="can" width="320" height="180" style="background:black;" ></canvas>
+        <span id="results"></span>
+		<span id="results1"></span>
+        </div>     
+  </body>
+
+<!--------------------------------------------
+
+	** scripts
+
+ --------------------------------------------->
 <script>
 //---------------------
 // ** switch to fullscreen mode 
