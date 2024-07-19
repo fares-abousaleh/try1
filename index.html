@@ -70,7 +70,8 @@ span{
 	** scripts
 
  --------------------------------------------->
-<script>
+<script>let things={boxes:[{x:-0.87,y:0.81,w:0.47,h:0.3},{x:-1.2,y:-0.57,w:0.15,h:1.07},{x:-0.03,y:-1.89,w:1.32,h:0.27},{x:1.08,y:-0.57,w:0.15,h:1},{x:0.84,y:0.72,w:0.37,h:0.3},{x:-2.28,y:0.03,w:0.21,h:2.47},{x:2.1,y:-0.06,w:0.25,h:2.47},],monsters:[{x:-0.69,y:-1.29,w:0.19,h:0.27},{x:0.45,y:-0.36,w:0.19,h:0.32},{x:-0.6,y:0.09,w:0.13,h:0.23},{x:0.87,y:1.65,w:0.32,h:0.45},{x:1.44,y:-2.49,w:0.13,h:0.18},{x:-1.68,y:-2.31,w:0.17,h:0.32},{x:-1.8,y:0.6,w:0.18,h:0.3},{x:-2.82,y:2.46,w:0.13,h:0.27},{x:2.67,y:0.3,w:0.16,h:0.27},{x:1.59,y:-0.69,w:0.16,h:0.3},{x:0.33,y:-1.29,w:0.18,h:0.25},{x:-1.8,y:-0.78,w:0.22,h:0.43},]}
+
 //---------------------
 // ** switch to fullscreen mode 
 
@@ -543,7 +544,9 @@ function initData(){
 	sp.push( pl )
 	
 	
-	//-- create enemies sprites		
+	//-- create random enemies sprites	
+	//   if [things] is undefined
+	if(things==undefined)
 	for(let k=1;k<80;k++){
 		sp.push( 
 	      new Sprite(
@@ -555,6 +558,19 @@ function initData(){
 		)
 		sp[k].frq=rnd(1,2)
 	}
+	else //load monsters from thing
+	for(let k=0;k<things.monsters.length;k++){
+		sp.push( 
+	      new Sprite(
+		      things.monsters[k].x,
+			  things.monsters[k].y,
+		      things.monsters[k].w*2,
+			  things.monsters[k].h*2,
+			  txPos[rndInt(0,3)]
+			  )
+		)
+		sp[sp.length-1].frq=rnd(1,2)
+	}
 	
 	
 	//-- background	sprite
@@ -563,6 +579,7 @@ function initData(){
 
 
 	//-- create collision blocks
+	if(things==undefined)
 	for(let k=0;k<13;k++){
 		const A = 0.45
 		let x = 0
@@ -581,6 +598,20 @@ function initData(){
 		p.th=0
 		CollisionBlocks.push( p )	
 		 
+	}
+	else for(let k=0;k<things.boxes.length;k++){
+		let p = 
+	      new Sprite(
+		      things.boxes[k].x,
+			  things.boxes[k].y,
+		      things.boxes[k].w*2,
+			  things.boxes[k].h*2,
+			  [0.5,0.5,0.75,0.75]
+			  )
+		 
+		p.color=[1,0.9,0.5,1]
+		p.th=0
+		CollisionBlocks.push( p )
 	}
 }
 	
