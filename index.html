@@ -9,10 +9,11 @@
  
 	<head>
 	<style>
-		h1
+h1
 {
 	font-size:5em;
 	background: blue;
+	adjust: center;
 	color:white;
 }
 
@@ -25,6 +26,11 @@ canvas
 {
 	width:100%;
 	margin:0;
+	font-size:1em;
+}
+
+div{
+	font-size:100%;
 }
 
 input 
@@ -41,17 +47,17 @@ p
 #results 
 {
 	position: absolute;
-	left: 10px;
-	top: 10px;
-	font-size:1.3em;
+	left: 1%;
+	top: 1%;
+	font-size:6em;
 	color:yellow;
 }
 #results1 
 {
 	position: absolute;
-	left: 10px;
-	top:  35px;
-	font-size:1.3em;
+	left: 1%;
+	top:  6%;
+	font-size:6em;
 	color:yellow;
 } </style>
 	</head>
@@ -62,14 +68,14 @@ p
 
  -------------------->
  	
-	<body onload="document.body.removeChild(document.getElementById('waitmessage')); initGL();initData();requestAnimationFrame(drawScene);">
+	<body>
         <h1 id="waitmessage"> LOADING PLEASE WAIT ...</h1> 
 		<div id="container">
         <canvas id="can" width="320" height="180" style="background:black;" ></canvas>
         <span id="results"></span>
 		<span id="results1"></span>
         </div>     
-  </body>
+  
 
 <!--------------------------------------------
 
@@ -81,7 +87,8 @@ p
 // ** switch to fullscreen mode 
 
 function fullScreen(e){
-    e = e||document.body;
+    if(e==undefined)e = document.body;
+	 
 	if(e.webkitRequestFullScreen)
 		e.webkitRequestFullScreen();
 	else if(e.mozRequestFullScreen)
@@ -292,16 +299,11 @@ function newTex(image){
 }
 
  
-
 var aspectRatio,
     World={},
 	Camera={},
 	CollisionBlocks=[] 
  
-	 
-
-
-	
 function initWorld(width,height){
 	 
 	aspectRatio = can.height *1.0/ can.width
@@ -315,10 +317,6 @@ function initWorld(width,height){
 	Camera.h = Camera.w * aspectRatio
 	Camera.maxX = World.hWidth  - Camera.w
 	Camera.maxY = World.hHeight - Camera.h
-	
-	 
-	
-	
 }
 
 function updateCamera(player)
@@ -338,7 +336,11 @@ function updateCamera(player)
 	Camera.x = sat( Camera.x, -Camera.maxX,Camera.maxX)
 	Camera.y = sat( Camera.y, -Camera.maxY,Camera.maxY)
 }
-
+/*---------------------------------------*
+ 
+               Sprite Class
+			
+ *---------------------------------------*/
 function Sprite(x,y,w,h,tx){
 	this.tx = tx
 	this.x  = x
@@ -354,58 +356,48 @@ function Sprite(x,y,w,h,tx){
 	this.color = [1,1,1,1]
 	this.th = rnd(Math.PI)
 	
-	this.detectWorldEdge=function(){
-		const mx = World.hWidth-this.width/2
-		const my = World.hHeight-this.height/2
-		this.x = sat(this.x,-mx,mx)
-		this.y = sat(this.y,-my,my)
-	}
-	
+	//----------------------------------------
+	//-- calculate distance to another sprite
 	this.distTo=function(sp){
 		let a = sp.x-this.x
 		let b = sp.y-this.y
 		return Math.sqrt(a*a+b*b)
 	}
 	
+	//----------------------------------------------
+	//-- checks the new position (newx,newy) for 
+	//   collisions with blocks & world edges,
+	//   then adjusts the new position
 	this.checkCollision=function(newx,newy){
 		
+		const rh ={x:newx,y:this.y,w:this.w,h:this.h}
+		const rv ={x:this.x,y:newy,w:this.w,h:this.h}
+		
+		const  sx = Math.sign(this.vx)
+		const  sy = Math.sign(this.vy)
+		const eps = 0.001
+		
+		//-- collisions with blocks
 		for(let i=0;i<CollisionBlocks.length;i++){
 			let c = CollisionBlocks[i]
-			let rh={x:newx,y:this.y,w:this.w,h:this.h}
-		    
-			let k=0
-			while(k<10&&intersectRects(rh,c)){
-				rh.x-=Math.sign(this.vx)*0.01
-				k++
-				newx=rh.x
-			}
 			
-			let rv={x:this.x,y:newy,w:this.w,h:this.h}
-			k=0
-			while(k<10&&intersectRects(rv,c)){
-				rv.y-=Math.sign(this.vy)*0.01
-				k++
-				newy=rv.y
-			}
-			
+		    if(sx!=0&&intersectRects(rh,c)) 
+				rh.x = c.x-sx*(eps+c.w+this.w)
+			 
+			if(sy!=0&&intersectRects(rv,c)) 
+				rv.y = c.y-sy*(eps+c.h+this.h)
 		}
+		newx = rh.x
+		newy = rv.y
 		
 		//-- detect world edge
-		let k =0
-		while(k<10&&(newx+this.w>World.hWidth||
-			newx-this.w<-World.hWidth))
-			{
-				newx-=Math.sign(this.vx)*0.01
-				k++
-			}
-		k =0
-		while(k<10&&(newy+this.h>World.hHeight||
-			newy-this.h<-World.hHeight))
-			{
-				newy-=Math.sign(this.vy)*0.01
-				k++
-			}	
 		
+		if(newx+this.w>World.hWidth||newx-this.w<-World.hWidth)
+				newx = sx * (World.hWidth-this.w-eps)
+			
+		if(newy+this.h>World.hHeight||newy-this.h<-World.hHeight)
+				newy = sy * (World.hHeight-this.h-eps)
+			
 		//-- assign new position		
 		this.x= newx
 		this.y= newy
@@ -450,9 +442,10 @@ function addSpriteToBuf(sprite){
 	cArr=cArr.concat(sprite.color)
 }
 
-function drawCollisionBlocks(){
-	for(let k=0;k<CollisionBlocks.length;k++)
-		addSpriteToBuf(CollisionBlocks[k])
+//-- add an array of sprites to be drawn
+function addSprites(sps){
+	for(let k=0;k<sps.length;k++)
+		addSpriteToBuf(sps[k])
 }
 
 //---------------------------------------------
@@ -462,13 +455,11 @@ var Mouse ={
 	x:0,y:0,btn:0
 }
 
-var showFPS = false
-
-window.addEventListener('mousedown',
-  function(e){
-  initAudio()	  
-  console.log(e);
-	if(!animOn){
+function onMouse(e){
+  
+  initAudio()
+  
+  if(!animOn){
 		animOn=true
 		requestAnimationFrame(drawScene);
 		fullScreen(container)
@@ -483,7 +474,8 @@ window.addEventListener('mousedown',
 	showFPS = (e.buttons!=1)
 	
   }
-);
+  
+window.addEventListener('mousedown',onMouse)
 
 var Key={
 	left:0,
@@ -493,12 +485,8 @@ var Key={
 	
 }
 
- 
-  
 window.addEventListener('keydown',
   function(e){
-	 
-	
 	switch(e.key){
 		case 'ArrowLeft':Key.left=1
 		break
@@ -547,7 +535,7 @@ const sp=[]
 	]	
 // ** Init Globals
 function initData(){
-	initAudio()
+	
 	initWorld(7,7)	
 	//------- create buffers & texture
 	vbuf = newBuffer("a_Position",2); // 2 coordinates per vertex
@@ -589,9 +577,11 @@ function initData(){
 	for(let k=0;k<13;k++){
 		const A = 0.45
 		let x = 0
-		while(x<A&&x>-A)x=rnd(World.hWidth)
 		let y = 0
-		while(y<A&&y>-A)y=rnd(World.hHeight)
+		while(x<A&&x>-A&&y<A&&y>-A){
+			x=rnd(World.hWidth)
+			y=rnd(World.hHeight)
+		}
 		
 		let p = new Sprite(
 		     x,y,
@@ -618,7 +608,7 @@ function drawScene (time){
 		
 		updateCamera(sp[0])
 		addSpriteToBuf(sp[sp.length-1])
-		drawCollisionBlocks() 
+		addSprites(CollisionBlocks) 
 		
 		
 		//-- update Monsters
@@ -712,7 +702,6 @@ function drawScene (time){
 		setBuffer(cbuf, new  Float32Array(cArr)) 
 		setBuffer(tbuf, new  Float32Array(tArr))
 		  
-		
 		ctx.drawArrays(ctx.TRIANGLES,0,vArr.length/2);
         
     
@@ -725,5 +714,11 @@ function drawScene (time){
         }else results.innerHTML="Click To Start";
 }
 
-
+document.body.onload = function(){
+	let waitmessage = document.getElementById('waitmessage')
+	document.body.removeChild(waitmessage)
+	initGL()
+	initData()  
+	results.innerHTML = "Click To Start"
+}
 </script></body></html>
