@@ -7,19 +7,16 @@
 
  -------------------->
  
-	<head>
-	<style>
-h1
+<head>
+<style>
+	
+#waitmessage
 {
-	font-size:80px;
+	padding: 70px 30px;
+	font-size:10vh;
 	background: blue;
-	justify: center;
-	color:white;
-}
-
-body
-{
-	font-size:20px;
+	text-align: center;
+	color: white;
 }
 
 canvas
@@ -32,20 +29,24 @@ canvas
 #results 
 {
 	position: absolute;
-	left: 5px;
-	top: 5px;
-	font-size: 50px;
-	color:yellow;
+	left: 2vw;
+	top:  2vh;
+	
 }
 
 #results1 
 {
 	position: absolute;
-	left: 5px;
-	top:  55px;
-	font-size:50px;
-	color:yellow;
+	left: 2vw;
+	top:  8vh;
+	 
 } 
+
+span{
+	font-size: 5vh ;
+	color:yellow;
+}
+
 </style>
 </head>
 	
@@ -401,6 +402,7 @@ function addSpriteToBuf(sprite){
 	let y = sprite.y - Camera.y
 	if(x-sprite.width>1||x+sprite.width<-1
 	   ||y+sprite.height<-1||y-sprite.height>1)return
+	   
 	let w = sprite.width *0.5
 	let h = sprite.height*0.5
 	let c = Math.cos(sprite.th )  
@@ -449,7 +451,7 @@ function onMouse(e){
   if(!animOn){
 		animOn=true
 		requestAnimationFrame(drawScene);
-		fullScreen(container)
+		 fullScreen(container)
 		if(snd==undefined)snd = makeSound(600)
 	}
     
@@ -636,14 +638,14 @@ function drawScene (time){
 		}
 		
 		if(Mouse.btn>0){
-			sp[0].vx += 3*dt*( Mouse.x-sp[0].x )
-			sp[0].vy += 3*dt*( Mouse.y-sp[0].y )
-			Mouse.btn-=1
+			sp[0].vx =  ( Mouse.x-sp[0].x )
+			sp[0].vy =  ( Mouse.y-sp[0].y )
+			Mouse.btn =0
 		}else{
-		 sp[0].vx += 0.0015*(Key.right-Key.left) 
-		 sp[0].vy += 0.0015*(Key.up-Key.down) 
+		 sp[0].vx  += dt*0.0015*(Key.right-Key.left) 
+		 sp[0].vy  += dt*0.0015*(Key.up-Key.down) 
 		}
-		const maxV = 0.05
+		const maxV = 0.03
 		let v = Math.pow(sp[0].vx*sp[0].vx +sp[0].vy *sp[0].vy,0.5)
 			if(v>maxV){
 				v=maxV/v
@@ -677,8 +679,8 @@ function drawScene (time){
 			  sp[0].checkCollision(newx,newy)
 			 
 		     
-			sp[0].vx*=0.993 
-			sp[0].vy*=0.993 
+			sp[0].vx*=0.9993 
+			sp[0].vy*=0.9993 
 			const th = time*0.009
 			const tt = 1.0+0.2*Math.sin(th )
 			sp[0].width = 0.25*tt
