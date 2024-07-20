@@ -59,9 +59,11 @@ span{
 	<body>
         <h1 id="waitmessage"> LOADING PLEASE WAIT ...</h1> 
 		<div id="container">
-        <canvas id="can" width="320" height="180"  ></canvas>
-        <span id="results"></span>
-		<span id="results1"></span>
+			<canvas id="can" width="320" height="180"  ></canvas>
+			<div id="trackers">
+				<span id="results"></span>
+				<span id="results1"></span>
+			</div>
         </div>     
   
 
@@ -70,14 +72,56 @@ span{
 	** scripts
 
  --------------------------------------------->
-<script>let things={boxes:[{x:-0.87,y:0.81,w:0.47,h:0.3},{x:-1.2,y:-0.57,w:0.15,h:1.07},{x:-0.03,y:-1.89,w:1.32,h:0.27},{x:1.08,y:-0.57,w:0.15,h:1},{x:0.84,y:0.72,w:0.37,h:0.3},{x:-2.28,y:0.03,w:0.21,h:2.47},{x:2.1,y:-0.06,w:0.25,h:2.47},],monsters:[{x:-0.69,y:-1.29,w:0.19,h:0.27},{x:0.45,y:-0.36,w:0.19,h:0.32},{x:-0.6,y:0.09,w:0.13,h:0.23},{x:0.87,y:1.65,w:0.32,h:0.45},{x:1.44,y:-2.49,w:0.13,h:0.18},{x:-1.68,y:-2.31,w:0.17,h:0.32},{x:-1.8,y:0.6,w:0.18,h:0.3},{x:-2.82,y:2.46,w:0.13,h:0.27},{x:2.67,y:0.3,w:0.16,h:0.27},{x:1.59,y:-0.69,w:0.16,h:0.3},{x:0.33,y:-1.29,w:0.18,h:0.25},{x:-1.8,y:-0.78,w:0.22,h:0.43},]}
+<script>let things=
+{
+	player:
+		{x:1.29,y:0.39,w:0.15,h:0.23},
+	boxes:[
+		{x:-0.15,y:1.44,w:1.97,h:0.3},
+		{x:-0.42,y:-0.18,w:0.13,h:1.3},
+		{x:-1.41,y:-0.99,w:0.84,h:0.15},
+		{x:-1.56,y:-0.27,w:0.09,h:0.53},
+		{x:0.78,y:-0.21,w:1.05,h:0.18},
+		{x:0.75,y:-1.35,w:0.12,h:0.92},
+		{x:-0.21,y:2.07,w:0.12,h:0.3},
+		{x:2.22,y:-1.77,w:0.79,h:0.15},
+	],
+	monsters:[
+		{x:2.37,y:-1.35,w:0.16,h:0.18},
+		{x:0.3,y:-1.23,w:0.12,h:0.2},
+		{x:-2.19,y:-2.28,w:0.57,h:0.63},
+		{x:0.69,y:2.49,w:0.15,h:0.23},
+		{x:-2.31,y:2.49,w:0.16,h:0.27},
+		{x:-1.08,y:0.51,w:0.14,h:0.23},
+	],
+}
+//--------------------------
+// ** hide / show / togle html element
+
+function showElement(e){
+  e.style.display = 'block'
+}
+
+
+function hideElement(e){
+  e.style.display = 'none'
+}
+
+
+function togleElement(e){
+  if( e.style.display === 'block' )
+	  e.style.display = 'none'
+  else 
+	  e.style.display = 'block'
+}
+
+
 
 //---------------------
 // ** switch to fullscreen mode 
 
 function fullScreen(e){
     if(e==undefined)e = document.body;
-	 
 	if(e.webkitRequestFullScreen)
 		e.webkitRequestFullScreen();
 	else if(e.mozRequestFullScreen)
@@ -486,8 +530,11 @@ window.addEventListener('keydown',
 		break
 		case 'ArrowDown':Key.down=1
 		break
-		case ' ': animOn=!animOn
+		case 'p': animOn=!animOn
+				  if(animOn)requestAnimationFrame(drawScene)	
 		break
+		case 't': togleElement(trackers)
+		break;
       }
   }
 )
@@ -538,6 +585,11 @@ function initData(){
 	//-- create player sprite
 	let	pl = new Sprite(  0,0,
 		            0.2,0.2,
+					txPos[4] 
+				  )
+	if(things!=undefined)
+	pl = new Sprite(  things.player.x,things.player.y,
+		            things.player.w*2,things.player.h,
 					txPos[4] 
 				  )
 				  
@@ -650,8 +702,8 @@ function drawScene (time){
 			 
 			 
 			const rr =  0.3*(1.0+0.23*Math.sin(sp[k].frq*time*0.008))
-			sp[k].width= rr
-			sp[k].height=0.093/rr 
+			// sp[k].width= rr
+			// sp[k].height=0.093/rr 
 			sp[k].th+=dt*rnd(0.9,1.6)
 			
 			if( intersectRects(sp[k],sp[0]) )
@@ -673,8 +725,8 @@ function drawScene (time){
 			sp[0].vy =  ( Mouse.y-sp[0].y )
 			Mouse.btn =0
 		}else{
-		 sp[0].vx  += dt*0.0015*(Key.right-Key.left) 
-		 sp[0].vy  += dt*0.0015*(Key.up-Key.down) 
+		 sp[0].vx  += dt*(Key.right-Key.left) 
+		 sp[0].vy  += dt*(Key.up-Key.down) 
 		}
 		const maxV = 0.03
 		let v = Math.pow(sp[0].vx*sp[0].vx +sp[0].vy *sp[0].vy,0.5)
