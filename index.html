@@ -233,6 +233,8 @@ const fragmentShader =
 precision mediump float;
 
 uniform float tm;
+uniform float X;
+uniform float Y;
  
 varying vec4 clr;
 
@@ -245,9 +247,15 @@ uniform sampler2D txMonster;
 uniform sampler2D txRand;
 
 void main(){
-
+    
+   if(texc.y<=0.502)  // not a stone
    gl_FragColor =   clr  *  texture2D(txMonster,texc)  ; 
-
+   else{
+   vec2 q = 0.001*vec2( cos(13.3*(X+pos.x)+13.0*tm),
+                       cos(15.5*(Y+pos.y)+10.0*tm)
+					  );
+   gl_FragColor =  clr*     texture2D(txMonster,q+0.1*sin( 3.1415 *(pos+vec2(X,Y)))+vec2(0.625,0.625)) ; 
+   }
 }
 
 `
@@ -261,6 +269,11 @@ const vArr= new Float32Array(MAX_VERTEX_NUM * 2)
 const cArr= new Float32Array(MAX_VERTEX_NUM * 4)
 const tArr= new Float32Array(MAX_VERTEX_NUM * 2)
 
+	 function setUnif(name,value){
+		let loc = ctx.getUniformLocation(prog,name)
+		ctx.uniform1f(loc,value)
+	 }
+	 
 	 
 	//--------------------------------
 	// ** newBuffer: creates a buffer and bind it to attribute 'name'
@@ -582,6 +595,15 @@ window.addEventListener('keyup',
       }
   }
 )
+
+window.addEventListener('touchstart',
+  function(e){
+	if(e.changedTouches.length>1){
+		animOn=!animOn
+		if(animOn)requestAnimationFrame(drawScene)
+  }
+  }
+ )
 // ** Globals
 var playerLife = 1000
 var animOn = false;
@@ -647,7 +669,8 @@ function initData(){
 	
 	//-- background	sprite
 	{
-		let bk = new Sprite(0,0,World.hWidth*2,World.hHeight*2,txPos[3])
+		let bk = new Sprite(0,0,World.hWidth*2,World.hHeight*2,[0.5,0.5,0.75,0.75])
+		bk.color=[0.0,0.1,0.3,1.0]
 		bk.th = 0
 		sp.push(bk)
 	}
@@ -663,7 +686,7 @@ function initData(){
 			  [0.5,0.5,0.75,0.75]
 			  )
 		 
-		p.color=[1,0.9,0.5,1]
+		p.color=[1,1,1,1]
 		p.th=0
 		CollisionBlocks.push( p )
 	}
@@ -679,6 +702,10 @@ function drawScene (time){
 		
 		
 		updateCamera(sp[0])
+		setUnif('X',Camera.x)
+		setUnif('Y',Camera.y)
+		setUnif('tm',time/1000.0)
+			
 		addSpriteToBuf(sp[sp.length-1])
 		addSprites(CollisionBlocks) 
 		
@@ -728,6 +755,7 @@ function drawScene (time){
 		 sp[0].vx  += dt*(Key.right-Key.left) 
 		 sp[0].vy  += dt*(Key.up-Key.down) 
 		}
+		 
 		const maxV = 0.03
 		let v = Math.pow(sp[0].vx*sp[0].vx +sp[0].vy *sp[0].vy,0.5)
 			if(v>maxV){
