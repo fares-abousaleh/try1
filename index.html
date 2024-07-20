@@ -598,7 +598,7 @@ window.addEventListener('keyup',
 
 window.addEventListener('touchstart',
   function(e){
-	if(e.changedTouches.length>1){
+	if(e.touches.length>1){
 		animOn=!animOn
 		if(animOn)requestAnimationFrame(drawScene)
   }
