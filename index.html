@@ -75,24 +75,27 @@ span{
 <script>let things=
 {
 	player:
-		{x:1.29,y:0.39,w:0.15,h:0.23},
+		{x:-1.17,y:-0.63,w:0.14,h:0.22},
 	boxes:[
-		{x:-0.15,y:1.44,w:1.97,h:0.3},
-		{x:-0.42,y:-0.18,w:0.13,h:1.3},
-		{x:-1.41,y:-0.99,w:0.84,h:0.15},
-		{x:-1.56,y:-0.27,w:0.09,h:0.53},
-		{x:0.78,y:-0.21,w:1.05,h:0.18},
-		{x:0.75,y:-1.35,w:0.12,h:0.92},
-		{x:-0.21,y:2.07,w:0.12,h:0.3},
-		{x:2.22,y:-1.77,w:0.79,h:0.15},
+		{x:-0.12,y:1.59,w:0.08,h:1.42},
+		{x:-1.32,y:1.71,w:1.11,h:0.15},
+		{x:-1.62,y:0.12,w:0.07,h:1.45},
+		{x:-0.75,y:-1.17,w:0.78,h:0.13},
+		{x:1.98,y:-1.08,w:0.99,h:0.12},
+		{x:0.99,y:1.59,w:0.07,h:1.42},
+		{x:2.01,y:-2.88,w:0.96,h:0.08},
+		{x:2.91,y:-1.98,w:0.06,h:0.75},
+		{x:1.11,y:-1.77,w:0.09,h:0.57},
+		{x:2.34,y:-2.07,w:0.49,h:0.13},
 	],
 	monsters:[
-		{x:2.37,y:-1.35,w:0.16,h:0.18},
-		{x:0.3,y:-1.23,w:0.12,h:0.2},
-		{x:-2.19,y:-2.28,w:0.57,h:0.63},
-		{x:0.69,y:2.49,w:0.15,h:0.23},
-		{x:-2.31,y:2.49,w:0.16,h:0.27},
-		{x:-1.08,y:0.51,w:0.14,h:0.23},
+		{x:-0.51,y:0.75,w:0.13,h:0.28},
+		{x:1.53,y:0.84,w:0.13,h:0.25},
+	],
+	greenMonsters:[
+		{x:1.53,y:-2.58,w:0.11,h:0.2},
+		{x:-1.86,y:2.31,w:0.12,h:0.2},
+		{x:-0.96,y:2.28,w:0.14,h:0.17},
 	],
 }
 //--------------------------
@@ -346,7 +349,7 @@ function initWorld(width,height){
 	World.hHeight = height/2
 	Camera.x = 0
 	Camera.y = 0
-	Camera.w = 0.3
+	Camera.w = 0.2
 	Camera.h = Camera.w * aspectRatio
 	Camera.maxX = World.hWidth  - Camera.w
 	Camera.maxY = World.hHeight - Camera.h
@@ -442,16 +445,17 @@ function Sprite(x,y,w,h,tx){
 // add sprite vertices to vertex buffer 
 // and add colors & texture coordinates to attribute buffers
 
-function addSpriteToBuf(sprite){
+function addSpriteToBuf(sprite,scalex=1,scaley=1,rotation=0){
 	let x = sprite.x - Camera.x
 	let y = sprite.y - Camera.y
 	if(x-sprite.width>1||x+sprite.width<-1
 	   ||y+sprite.height<-1||y-sprite.height>1)return
 	   
-	let w = sprite.width *0.5
-	let h = sprite.height*0.5
-	let c = Math.cos(sprite.th )  
-	let s = Math.sin(sprite.th )
+	let w = sprite.width *0.5*scalex
+	let h = sprite.height*0.5*scaley
+	const th = sprite.th+rotation
+	let c = Math.cos( th )  
+	let s = Math.sin( th )
 	let px =  c*w-s*h
 	let py =  s*w+c*h
 	let qx = -c*w-s*h
@@ -570,10 +574,11 @@ const sp=[]
 		[0.25,0.25,0.5,0.5],
 		[0.25,0.5,0.5,0.75]
 	]	
+	
 // ** Init Globals
 function initData(){
 	
-	initWorld(7,7)	
+	initWorld(6,6)	
 	//------- create buffers & texture
 	vbuf = newBuffer("a_Position",2); // 2 coordinates per vertex
 	cbuf = newBuffer("color",4); // 4 color components per vertex
@@ -583,12 +588,7 @@ function initData(){
 	
 	
 	//-- create player sprite
-	let	pl = new Sprite(  0,0,
-		            0.2,0.2,
-					txPos[4] 
-				  )
-	if(things!=undefined)
-	pl = new Sprite(  things.player.x,things.player.y,
+	let pl = new Sprite(  things.player.x,things.player.y,
 		            things.player.w*2,things.player.h,
 					txPos[4] 
 				  )
@@ -596,62 +596,42 @@ function initData(){
 	sp.push( pl )
 	
 	
-	//-- create random enemies sprites	
-	//   if [things] is undefined
-	if(things==undefined)
-	for(let k=1;k<80;k++){
-		sp.push( 
-	      new Sprite(
-		      rnd(World.hWidth),
-			  rnd(World.hHeight),
-		      0.2,0.2,
-			  txPos[rndInt(0,3)]
-			  )
-		)
-		sp[k].frq=rnd(1,2)
-	}
-	else //load monsters from thing
+	//load monsters from thing
 	for(let k=0;k<things.monsters.length;k++){
-		sp.push( 
+		let mon =  
 	      new Sprite(
 		      things.monsters[k].x,
 			  things.monsters[k].y,
 		      things.monsters[k].w*2,
 			  things.monsters[k].h*2,
-			  txPos[rndInt(0,3)]
+			  txPos[0]
 			  )
-		)
-		sp[sp.length-1].frq=rnd(1,2)
+		mon.frq=rnd(1,2)
+		sp.push(mon)
 	}
 	
+	//-- load green monsters
+	for(let k=0;k<things.greenMonsters.length;k++){
+		let mon =  new Sprite(
+		      things.greenMonsters[k].x,
+			  things.greenMonsters[k].y,
+		      things.greenMonsters[k].w*2,
+			  things.greenMonsters[k].h*2,
+			  txPos[2]
+			  )
+		mon.frq=rnd(1,2)
+		sp.push(mon)
+	}
 	
 	//-- background	sprite
-	sp.push( new Sprite(0,0,World.hWidth*2,World.hHeight*2,txPos[3]))    
-	sp[sp.length-1].th = 0
-
-
-	//-- create collision blocks
-	if(things==undefined)
-	for(let k=0;k<13;k++){
-		const A = 0.45
-		let x = 0
-		let y = 0
-		while(x<A&&x>-A&&y<A&&y>-A){
-			x=rnd(World.hWidth)
-			y=rnd(World.hHeight)
-		}
-		
-		let p = new Sprite(
-		     x,y,
-			rnd(0.3,1),rnd(0.3,1),
-			[0.5,0.5,0.75,0.75]
-		)
-		p.color=[1,0.9,0.5,1]
-		p.th=0
-		CollisionBlocks.push( p )	
-		 
+	{
+		let bk = new Sprite(0,0,World.hWidth*2,World.hHeight*2,txPos[3])
+		bk.th = 0
+		sp.push(bk)
 	}
-	else for(let k=0;k<things.boxes.length;k++){
+	
+	//-- create collision blocks
+	for(let k=0;k<things.boxes.length;k++){
 		let p = 
 	      new Sprite(
 		      things.boxes[k].x,
@@ -701,9 +681,9 @@ function drawScene (time){
 				sp[k].vy*=0.993
 			 
 			 
-			const rr =  0.3*(1.0+0.23*Math.sin(sp[k].frq*time*0.008))
-			// sp[k].width= rr
-			// sp[k].height=0.093/rr 
+			const rr =  1.0+0.23*Math.sin(sp[k].frq*time*0.008)
+			let sclx = rr
+			let scly =1.0/rr 
 			sp[k].th+=dt*rnd(0.9,1.6)
 			
 			if( intersectRects(sp[k],sp[0]) )
@@ -715,7 +695,7 @@ function drawScene (time){
 				}
 					
 			}
-			addSpriteToBuf(sp[k])
+			addSpriteToBuf(sp[k],sclx,scly)
 			
 			
 		}
@@ -778,7 +758,7 @@ function drawScene (time){
         
     
         if(animOn){
-            //if(showFPS)
+            //if(showFPS)  
 			results.innerHTML ="fps:"+ Math.round(1.0/(dt+0.0001));
 			//else results.innerHTML =""
 			results1.innerHTML="life:"+playerLife
