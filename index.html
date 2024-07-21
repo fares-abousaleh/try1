@@ -10,7 +10,7 @@
 #waitmessage
 {
 	padding: 70px 30px;
-	font-size:6vh;
+	font-size:10vh;
 	background: blue;
 	text-align: center;
 	color: white;
@@ -31,7 +31,7 @@ canvas{
 	top:  8vh;
 } 
 span{
-	font-size: 2vh ;
+	font-size: 5vh ;
 	color:yellow;
 }
 </style>
@@ -88,6 +88,11 @@ span{
 		{x:-2.7,y:1.05,w:0.11,h:0.18},
 		{x:2.64,y:-0.93,w:0.1,h:0.18},
 	],
+	bombas:[
+		{x:-1.0,y:-1.20,w:0.09,h:0.09},
+		{x:-2.0,y: 1.0,w:0.09,h:0.09},
+		{x: 1.0,y: 2.80,w:0.09,h:0.09},
+	]
 }
 //--------------------------
 // ** hide / show / togle html element
@@ -96,11 +101,9 @@ function showElement(e){
   e.style.display = 'block'
 }
 
-
 function hideElement(e){
   e.style.display = 'none'
 }
-
 
 function togleElement(e){
   if( e.style.display === 'block' )
@@ -108,8 +111,6 @@ function togleElement(e){
   else 
 	  e.style.display = 'block'
 }
-
-
 
 //---------------------
 // ** switch to fullscreen mode 
@@ -130,7 +131,7 @@ function fullScreen(e){
 //    if a and b are undefined: return a number in [-1,1[
 
 function rnd(a,b){
-	if(a==undefined){a=1;b=1}
+	if(a==undefined){a=-1;b=1}
 	else if(b==undefined){b=-a}
 	return a+(b-a)*Math.random();
 }
@@ -159,14 +160,35 @@ function intersectRects(A,B){
 }
 
 
-var rate = 8000 
+var rate = 44100 
 
 var audio_context = undefined
 
 var snd = makeSound(500)
 
+var sndBom = makeBom(69000,0.999)
+
+function makeBom(N=8000,g=0.96){
+	
+	let snd = new Float32Array(N)
+	
+	let a =1
+	let v = 0
+	const d = 1.0/N
+	let lop = 0.1
+	
+	for(let k=0;k<snd.length;k++,a*=g,lop+=0.06-0.1*lop)
+	{
+		v = v*lop+(1-lop)* a  * rnd()
+		snd[k] = (1-k*d)*v
+	}
+	
+	return snd
+	
+}
+
 function playSnd(buf){
-  if(audio_context==undefined) return
+  initAudio()
   var source  = audio_context.createBuffer(1,buf.length,rate);
   source.copyToChannel(buf,0,0);
   var oup = audio_context.createBufferSource();
@@ -177,7 +199,7 @@ function playSnd(buf){
 
 function makeSound(fr){
 	if(fr==undefined) fr = 500
-	let snd = new Float32Array(10000)
+	let snd = new Float32Array(60000)
 	let a =1
 	let th =0
 	let dth = Math.PI*2*fr/rate
@@ -316,7 +338,11 @@ const tArr= new Float32Array(MAX_VERTEX_NUM * 2)
 		}
 		ctx.viewport(0,0,ctx.canvas.width,ctx.canvas.height);
 		ctx.useProgram(prog);
-		
+		//------- create buffers & texture
+	    vbuf = newBuffer("a_Position",2); // 2 coordinates per vertex
+	    cbuf = newBuffer("color",4);      // 4 color components per vertex
+	    tbuf = newBuffer("texco",2);      // 2 texture coordinates per vertex		
+	
 	}
 
 	//--------------------------------
@@ -424,6 +450,10 @@ function Sprite(x,y,w,h,tx){
 		let a = sp.x-this.x
 		let b = sp.y-this.y
 		return Math.sqrt(a*a+b*b)
+	}
+	
+	this.speed=function(){
+		return Math.sqrt(this.vx*this.vx+this.vy*this.vy)
 	}
 	
 	//----------------------------------------------
@@ -570,7 +600,7 @@ window.addEventListener('keydown',
 		case 'ArrowDown':Key.down=1
 		break
 		case 'p': animOn=!animOn
-				  if(animOn)requestAnimationFrame(drawScene)	
+				  if(animOn)startAnim()	
 		break
 		case 't': togleElement(trackers)
 		break;
@@ -598,19 +628,24 @@ window.addEventListener('keyup',
 
 window.addEventListener('touchstart',
   function(e){
-	if(e.touches.length==2){
+	if(e.changedTouches.length>1){
 		animOn=!animOn
-		if(animOn)requestAnimationFrame(drawScene)
+		if(animOn)startAnim()
   }
-else if(e.touches.length==3)
-  togleElement(trackers)
   }
  )
 // ** Globals
+
 var playerLife = 1000
 var animOn = false;
 var then = 0, prevSnd=0; 
-const sp=[]
+
+var player
+var backgroundSp
+const monsters = []
+const greenMonsters = []
+const bombas = []
+
 //-- sprite sheet divisions
 	const txPos=[
 	    [0,0,0.25,0.25],
@@ -625,24 +660,29 @@ const sp=[]
 function initData(){
 	
 	initWorld(6,6)	
-	//------- create buffers & texture
-	vbuf = newBuffer("a_Position",2); // 2 coordinates per vertex
-	cbuf = newBuffer("color",4); // 4 color components per vertex
-	tbuf = newBuffer("texco",2); // 2 texture coordinates per vertex		
 	newTex(image);
 		
-	
-	
 	//-- create player sprite
-	let pl = new Sprite(  things.player.x,things.player.y,
+	player = new Sprite(  things.player.x,things.player.y,
 		            things.player.w*2,things.player.h,
 					txPos[4] 
 				  )
 				  
-	sp.push( pl )
+	//-- load bombas from thing
+	for(let k=0;k<things.bombas.length;k++){
+		let bom =  
+	      new Sprite(
+		      things.bombas[k].x,
+			  things.bombas[k].y,
+		      things.bombas[k].w*2,
+			  things.bombas[k].h*2,
+			  txPos[1]
+			  )
+		bom.frq=rnd(1,2)
+		bombas.push(bom)
+	} 
 	
-	
-	//load monsters from thing
+	//-- load monsters from thing
 	for(let k=0;k<things.monsters.length;k++){
 		let mon =  
 	      new Sprite(
@@ -653,29 +693,26 @@ function initData(){
 			  txPos[0]
 			  )
 		mon.frq=rnd(1,2)
-		sp.push(mon)
+		monsters.push(mon)
 	}
 	
 	//-- load green monsters
 	for(let k=0;k<things.greenMonsters.length;k++){
 		let mon =  new Sprite(
-		      things.greenMonsters[k].x,
-			  things.greenMonsters[k].y,
-		      things.greenMonsters[k].w*2,
-			  things.greenMonsters[k].h*2,
-			  txPos[2]
+				  things.greenMonsters[k].x,
+				  things.greenMonsters[k].y,
+				  things.greenMonsters[k].w*2,
+				  things.greenMonsters[k].h*2,
+				  txPos[2]
 			  )
 		mon.frq=rnd(1,2)
-		sp.push(mon)
+		greenMonsters.push(mon)
 	}
 	
 	//-- background	sprite
-	{
-		let bk = new Sprite(0,0,World.hWidth*2,World.hHeight*2,[0.5,0.5,0.75,0.75])
-		bk.color=[0.0,0.1,0.3,1.0]
-		bk.th = 0
-		sp.push(bk)
-	}
+		backgroundSp = new Sprite(0,0,World.hWidth*2,World.hHeight*2,[0.5,0.5,0.75,0.75])
+		backgroundSp.color=[0.1,0.2,0.8,1.0]
+		backgroundSp.th = 0
 	
 	//-- create collision blocks
 	for(let k=0;k<things.boxes.length;k++){
@@ -698,44 +735,69 @@ function initData(){
 function drawScene (time){
 	  var dt = 0.001*(time-then)
 		then=time;
+		let monNum=0
 		
-		
-		
-		
-		
-		updateCamera(sp[0])
+		updateCamera(player)
 		setUnif('X',Camera.x)
 		setUnif('Y',Camera.y)
 		setUnif('tm',time/1000.0)
 			
-		addSpriteToBuf(sp[sp.length-1])
+		//-- enque background to drawing 
+		addSpriteToBuf(backgroundSp)
+		
+		//-- enque walls to drawing 
 		addSprites(CollisionBlocks) 
 		
-		
-		//-- update Monsters
-		for(let k=sp.length-2;k>0;k--){
+	  //-- update Monsters ---
+		for(let k=0;k<monsters.length;k++)
+		{
+			let mon = monsters[k]
+			
+			if(mon.state==='dead')continue
+			monNum++
+			
+			//-- detect bombas 
+			for(let i=0;i<bombas.length;i++)
+				if(bombas[i].distTo(mon)<mon.w*2)
+				{
+					mon.state='dead'
+					playSnd(sndBom)
+					break
+				}
+				
 			let r =  0.1+0.01*k
-			if(rndDecide(0.01)){
-				sp[k].ax=rnd(1)
-				sp[k].ay=rnd(1)
+			if(rndDecide(0.3))
+			{ 
+				let d = mon.distTo(player)
+				mon.ax = (player.x-mon.x)*dt*32/(1+d)
+				mon.ay = (player.y-mon.y)*dt*32/(1+d)
+			}
+			else 
+			for(let i=k+1;i<monsters.length;i++)
+			{
+				let other = monsters[i]
+				let d = mon.distTo(other)
+				if(d<0.4){
+					mon.ax+= -(other.x-mon.x)*dt*20.0*(0.4-d)/(0.1+d)
+					mon.ay+= -(other.y-mon.y)*dt*20.0*(0.4-d)/(0.1+d)
+				}
 			}
 			 
-				sp[k].vx+=sp[k].ax*dt
-				sp[k].vy+=sp[k].ay*dt
-				let sx = sp[k].x+ sp[k].vx*dt
-				let sy = sp[k].y+ sp[k].vy*dt
-				 sp[k].checkCollision(sx,sy)
+			mon.vx+=mon.ax*dt
+			mon.vy+=mon.ay*dt
+			let sx = mon.x+ mon.vx*dt
+			let sy = mon.y+ mon.vy*dt
+			mon.checkCollision(sx,sy)
 				 
-				sp[k].vx*=0.993
-				sp[k].vy*=0.993
+			mon.vx*=0.993
+			mon.vy*=0.993
 			 
-			 
-			const rr =  1.0+0.23*Math.sin(sp[k].frq*time*0.008)
+			const rr =  1.0+0.023*Math.sin(mon.frq*time*0.008)
 			let sclx = rr
 			let scly =1.0/rr 
-			sp[k].th+=dt*rnd(0.9,1.6)
+			mon.th+=dt*rnd(0.9,1.6)
 			
-			if( intersectRects(sp[k],sp[0]) )
+			if( intersectRects(mon,player) )
 			{
 				if(time>prevSnd+100){
 					playSnd(snd)
@@ -744,81 +806,152 @@ function drawScene (time){
 				}
 					
 			}
-			addSpriteToBuf(sp[k],sclx,scly)
-			
-			
+			addSpriteToBuf(mon,sclx,scly)
+		}
+		//-- update bombas
+		for(let k=0;k<bombas.length;k++){
+			let bom = bombas[k]
+			const rr =  1.0+0.063*Math.sin(bom.frq*time*0.008)
+			let sclx = rr
+			let scly =1.0/rr 
+			addSpriteToBuf(bom,sclx,scly)
 		}
 		
-		if(Mouse.btn>0){
-			sp[0].vx =  ( Mouse.x-sp[0].x )
-			sp[0].vy =  ( Mouse.y-sp[0].y )
-			Mouse.btn =0
-		}else{
-		 sp[0].vx  += dt*(Key.right-Key.left) 
-		 sp[0].vy  += dt*(Key.up-Key.down) 
-		}
-		 
-		const maxV = 0.03
-		let v = Math.pow(sp[0].vx*sp[0].vx +sp[0].vy *sp[0].vy,0.5)
-			if(v>maxV){
-				v=maxV/v
-				sp[0].vx *=v
-				sp[0].vy *=v
-			}
-			sp[0].th =  Math.PI+ Math.atan2(sp[0].vy,sp[0].vx)  
+		//-- update reen Monsters ---
+		for(let k=0;k<greenMonsters.length;k++)
+		{
+			let mon = greenMonsters[k]
 			
+			if(mon.state==='dead')continue
+			monNum++
+			
+			//-- detect bombas 
+			for(let i=0;i<bombas.length;i++)
+				if(bombas[i].distTo(mon)<mon.w*2)
+				{
+					mon.state='dead'
+					playSnd(sndBom)
+					break
+				}
+				
+			let r =  0.1+0.01*k
+			if(rndDecide(0.3))
+			{ 
+				let d = mon.distTo(player)
+				mon.ax= (player.x-mon.x)*dt*32/(1+d)
+				mon.ay= (player.y-mon.y)*dt*32/(1+d)
+			}
+			else 
+			for(let i=k+1;i<greenMonsters.length;i++)
+			{
+				let other = greenMonsters[i]
+				let d = mon.distTo(other)
+				if(d<0.4)
+				{
+					mon.ax+= -(other.x-mon.x)*dt*20.0*(0.4-d)/(0.1+d)
+					mon.ay+= -(other.y-mon.y)*dt*20.0*(0.4-d)/(0.1+d)
+				}
+			}
+			 
+			mon.vx+=mon.ax*dt
+			mon.vy+=mon.ay*dt
+			
+			let sx = mon.x+ mon.vx*dt
+			let sy = mon.y+ mon.vy*dt
+			mon.checkCollision(sx,sy)
+				 
+			mon.vx*=0.993
+			mon.vy*=0.993
 			 
 				
-			let i=sp[0].tx[1]
-			let j=sp[0].tx[3]
+			const rr =  1.0+0.063*Math.sin(mon.frq*time*0.008)
+			let sclx = rr
+			let scly =1.0/rr 
+			mon.th+=dt*rnd(0.9,1.6)
+			
+			if( intersectRects(mon,player) )
+			{
+				if(time>prevSnd+100){
+					playSnd(snd)
+					playerLife--
+					prevSnd=time
+				}
+					
+			}
+			addSpriteToBuf(mon,sclx,scly)
+		}
+		
+		//-- update player 
+		if(Mouse.btn>0){
+			player.vx =  ( Mouse.x-player.x )
+			player.vy =  ( Mouse.y-player.y )
+			Mouse.btn =0
+		}else{
+		 player.vx  += dt*(Key.right-Key.left) 
+		 player.vy  += dt*(Key.up-Key.down) 
+		}
+		 
+		
+		const maxV = 0.03
+		let v = player.speed()
+			if(v>maxV){
+				v=maxV/v
+				player.vx *=v
+				player.vy *=v
+			}
+			player.th =  Math.PI+ Math.atan2(player.vy,player.vx)  
+			
+			let i=player.tx[1]
+			let j=player.tx[3]
 			
 			  
-			if(sp[0].vx>= 0){
-				sp[0].tx[1]=Math.max(i,j)
-				sp[0].tx[3]=Math.min(i,j)
+			if(player.vx>= 0){
+				player.tx[1]=Math.max(i,j)
+				player.tx[3]=Math.min(i,j)
 			}else
-				if(sp[0].vx<0)
+				if(player.vx<0)
 			{
-				sp[0].tx[3]=Math.max(i,j)
-				sp[0].tx[1]=Math.min(i,j)
+				player.tx[3]=Math.max(i,j)
+				player.tx[1]=Math.min(i,j)
 			}
 			 
+			let newx = player.x+  0.6* player.vx
+			let newy = player.y+  0.6* player.vy
 			
+			player.checkCollision(newx,newy)
 			 
-			 
-			let newx = sp[0].x+  0.6* sp[0].vx
-			let newy = sp[0].y+  0.6* sp[0].vy
-			
-			  sp[0].checkCollision(newx,newy)
-			 
-		     
-			sp[0].vx*=0.9993 
-			sp[0].vy*=0.9993 
+			player.vx*=0.993 
+			player.vy*=0.993 
 			const th = time*0.009
 			const tt = 1.0+0.2*Math.sin(th )
-			sp[0].width = 0.25*tt
-			sp[0].height = 0.3/tt
-		
-		addSpriteToBuf(sp[0])
-		results1.innerHTML="sprites:"+vNum/6
-		drawAll()
+			addSpriteToBuf(player,tt,1/tt,0)
+			
+			
         
-    
-        if(animOn){
-            //if(showFPS)  
+        //-- stats --
+        if(animOn){ 
 			results.innerHTML ="fps:"+ Math.round(1.0/(dt+0.0001));
-			//else results.innerHTML =""
+			results1.innerHTML="sprites:"+vNum/6
 			results1.innerHTML+="<br>life:"+playerLife
+            results1.innerHTML+="<br>monsters:"+monNum
             requestAnimationFrame(drawScene);
-        }else results1.innerHTML="Click To Start<br>Single finger to navigate<br>Two fingers to pause <br> Three fungers to hide stats";
+        }else results.innerHTML="Click To Start";
+		
+		//-- send queue to webgl --
+			drawAll()
 }
 
+function startAnim(){
+	then=Date.now()
+	requestAnimationFrame(drawScene)
+}
+
+//--- main entry 
 document.body.onload = function(){
 	let waitmessage = document.getElementById('waitmessage')
 	document.body.removeChild(waitmessage)
 	initGL()
 	initData()  
-requestAnimationFrame(drawScene)
-	//results.innerHTML = "Click To Start"
+	startAnim()
 }
 </script></body></html>
