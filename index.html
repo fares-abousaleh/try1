@@ -598,10 +598,12 @@ window.addEventListener('keyup',
 
 window.addEventListener('touchstart',
   function(e){
-	if(e.touches.length>1){
+	if(e.touches.length==2){
 		animOn=!animOn
 		if(animOn)requestAnimationFrame(drawScene)
   }
+else if(e.touches.length==3)
+  togleElement(trackers)
   }
  )
 // ** Globals
@@ -808,7 +810,7 @@ function drawScene (time){
 			//else results.innerHTML =""
 			results1.innerHTML+="<br>life:"+playerLife
             requestAnimationFrame(drawScene);
-        }else results.innerHTML="Click To Start";
+        }else results1.innerHTML="Click To Start<br>Single finger to navigate<br>Two fingers to pause <br> Three fungers to hide stats";
 }
 
 document.body.onload = function(){
@@ -816,6 +818,7 @@ document.body.onload = function(){
 	document.body.removeChild(waitmessage)
 	initGL()
 	initData()  
-	results.innerHTML = "Click To Start"
+requestAnimationFrame(drawScene)
+	//results.innerHTML = "Click To Start"
 }
 </script></body></html>
