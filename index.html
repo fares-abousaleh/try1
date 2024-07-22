@@ -150,6 +150,8 @@ var audio_context = undefined
 
 var snd = makeSound(500)
 
+var isPlaying = false
+
 var sndBom = makeBom(69000,0.999)
 
 function makeBom(N=8000,g=0.96){
@@ -173,6 +175,9 @@ function makeBom(N=8000,g=0.96){
 
 function playSnd(buf){
   initAudio()
+  if(isPlaying)return
+  isPlaying=true
+  setTimeout(function(){isPlaying=false},300)
   var source  = audio_context.createBuffer(1,buf.length,rate);
   source.copyToChannel(buf,0,0);
   var oup = audio_context.createBufferSource();
@@ -545,13 +550,14 @@ var Mouse ={
 }
 
 function onMouse(e){
-  
+  if(!animOn){
+		fullScreen(container)
+		startAnim()
+	}
+	
   initAudio()
   
-  if(!animOn){
-		startAnim()
-		fullScreen(container)
-	}
+  
     
 	Mouse.x= -1+(e.x-can.offsetLeft) * 2.0/can.clientWidth
 	Mouse.y=  can.clientHeight* 1.0/can.clientWidth -(e.y-can.offsetTop) * 2.0/can.clientWidth 
@@ -610,7 +616,9 @@ window.addEventListener('keyup',
 )
 
 window.addEventListener('touchstart',
+  
   function(e){
+	  if(!animOn)fullScreen(container)
 	switch(e.touches.length){
 		case 2: togleAnim()
 		break
@@ -937,7 +945,6 @@ function drawScene ( ){
 }
 
 function startAnim(){
-	fullScreen(container)
 	animOn=true
 	then=Date.now()
 	requestAnimationFrame(drawScene)
