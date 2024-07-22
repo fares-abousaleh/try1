@@ -259,16 +259,21 @@ uniform sampler2D txRand;
 
 void main(){
    
+   float x = X+pos.x;
+   float y = Y+pos.y;
    
    if(texc.y<=0.502)  // not a stone
 	gl_FragColor =   clr  *  texture2D(txMonster,texc)  ; 
-   else{
+   
+   else
+   {
 	   float cf = (clr.x<1.0)?4.3243:3.0;
-	vec2 q = 0.001*vec2( cos(13.3*(X+pos.x)+13.0*tm),
-                       cos( 15.5*(Y+pos.y)+10.0*tm)
-					  );
-	gl_FragColor =  clr*     texture2D(txMonster,q+ 0.12*sin( cf*(pos+vec2(X,Y)))+vec2(0.625,0.625)) ; 
+	   vec2 q = 0.001*vec2( sin(10.1*(y-x)-tm*14.0)*cos( 13.3*x+ 9.0*tm ),
+							sin(11.1*(x-y)+tm*13.0)*cos( 15.5*y+ 8.0*tm )
+					      );
+	   gl_FragColor =  clr*     texture2D(txMonster,q+ 0.123*sin( cf*(pos+vec2(X,Y)))+vec2(0.625,0.625)) ; 
    }
+   
 }
 
 `
@@ -726,16 +731,16 @@ function initData(){
 }
 	
 //------------------------------------------------
-function drawScene ( ){
+function drawScene (time){
 	  
 	  if(!animOn)return
 	  
 	  if(then==undefined){
-		  then=Date.now()
+		  then=time
 		  requestAnimationFrame(drawScene)
 		  return
 	  }
-	  let time = Date.now()
+	  //let time = Date.now() 
 	  var dt = 0.001*(time-then)
 		then=time;
 		let monNum=0
@@ -947,7 +952,6 @@ function drawScene ( ){
 
 function startAnim(){
 	animOn=true
-	then=Date.now()
 	requestAnimationFrame(drawScene)
 }
 
