@@ -281,7 +281,7 @@ void main(){
 
 	
 
-const MAX_VERTEX_NUM = 4000
+const MAX_VERTEX_NUM = 10000
 var vNum = 0
 var ctx ,prog, vbuf, cbuf, tbuf;
 const vArr= new Float32Array(MAX_VERTEX_NUM * 2)
@@ -548,6 +548,53 @@ function addSprites(sps){
 		addSpriteToBuf(sps[k])
 }
 
+
+//-- explosion animation 
+
+const explosions = []
+const explosionMax = 20
+var explosionCur =0
+
+function startExplosion(sp){
+	
+	for(let k=0;k<10;k++){
+		let p = new Sprite(sp.x, sp.y, 
+	                  0.2*sp.width, 0.2*sp.height, 
+					  [])
+		let a = sp.tx[0]
+		let b = sp.tx[1]
+		let aa = sp.tx[2]
+		let bb = sp.tx[3]
+		p.tx=[a+0.5*rnd(0.01,aa-a),b+0.5*rnd(0.01,bb-b),
+		      aa-0.5*rnd(0.01,aa-a),bb-0.5*rnd(0.01,bb-b)]
+		p.color=[1,1,1,1]
+		p.vx=0.51*rnd()
+		p.vy=0.51*rnd()
+		explosions[explosionCur]=p
+	    explosionCur++
+	    if(explosionCur>=explosionMax)explosionCur=0 
+	}
+
+	
+	 
+}
+
+function explosionsUpdate(dt){
+	for(let k=0;k<explosions.length;k++)
+	{
+		let p = explosions[k]
+		if(!p||p.color[3]<0.01)continue
+		p.x+=p.vx*dt
+		p.y+=p.vy*dt
+		if(p.color[3]>0)
+			p.color[3]-=1.0/(3.0*60.0)
+		p.th+=dt*rnd(10,22)
+		addSpriteToBuf(p)
+	}
+}
+
+
+ 
 //---------------------------------------------
 // ** Event Listeners
 
@@ -645,6 +692,7 @@ var backgroundSp
 const monsters = []
 const greenMonsters = []
 const bombas = []
+ 
 
 //-- sprite sheet divisions
 	const txPos=[
@@ -681,7 +729,18 @@ function initData(){
 		bom.frq=rnd(1,2)
 		bombas.push(bom)
 	} 
-	
+	//add some bombas for experiments
+	{
+		let bom =  
+	      new Sprite(
+		      0,-2.6,
+			  0.2,
+			  0.2,
+			  txPos[1]
+			  )
+		bom.frq=rnd(1,2)
+		bombas.push(bom)
+	} 
 	//-- load monsters from thing
 	for(let k=0;k<things.monsters.length;k++){
 		let mon =  
@@ -751,6 +810,8 @@ function drawScene (time){
 		setUnif('Y',Camera.y)
 		setUnif('tm',time/1000.0)
 			
+		
+		
 		//-- enque background to drawing 
 		addSpriteToBuf(backgroundSp)
 		
@@ -771,6 +832,7 @@ function drawScene (time){
 				{
 					mon.state='dead'
 					playSnd(sndBom)
+					startExplosion(mon)
 					break
 				}
 				
@@ -841,6 +903,7 @@ function drawScene (time){
 				{
 					mon.state='dead'
 					playSnd(sndBom)
+					startExplosion(mon)
 					break
 				}
 				
@@ -930,13 +993,14 @@ function drawScene (time){
 			
 			player.checkCollision(newx,newy)
 			 
-			player.vx*=0.993 
-			player.vy*=0.993 
+			player.vx*=0.93 
+			player.vy*=0.93 
 			const th = time*0.009
 			const tt = 1.0+0.2*Math.sin(th )
 			addSpriteToBuf(player,tt,1/tt,0)
 			
-			
+		//-- explosions
+		explosionsUpdate(dt)	
         
         //-- stats --
         if(animOn){ 
