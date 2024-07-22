@@ -394,8 +394,8 @@ function initWorld(width,height){
 	Camera.y = 0
 	Camera.w = 0.2
 	Camera.h = Camera.w * aspectRatio
-	Camera.maxX = World.hWidth  - Camera.w
-	Camera.maxY = World.hHeight - Camera.h
+	Camera.maxX = World.hWidth  - 1
+	Camera.maxY = World.hHeight - aspectRatio
 }
 
 function updateCamera(player)
@@ -550,8 +550,9 @@ var Mouse ={
 }
 
 function onMouse(e){
+  fullScreen()
   if(!animOn){
-		fullScreen(container)
+		
 		startAnim()
 	}
 	
@@ -564,12 +565,12 @@ function onMouse(e){
 	Mouse.x += Camera.x
 	Mouse.y += Camera.y
 	Mouse.btn += 1
-	showFPS = (e.buttons!=1)
+	 
 	
   }
   
 window.addEventListener('mousedown',onMouse)
-
+ 
 var Key={
 	left:0,
 	right:0,
@@ -618,7 +619,7 @@ window.addEventListener('keyup',
 window.addEventListener('touchstart',
   
   function(e){
-	  if(!animOn)fullScreen(container)
+	  if(!animOn)fullScreen( )
 	switch(e.touches.length){
 		case 2: togleAnim()
 		break
