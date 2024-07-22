@@ -10,7 +10,7 @@
 #waitmessage
 {
 	padding: 70px 30px;
-	font-size:10vh;
+	font-size:10vmin;
 	background: blue;
 	text-align: center;
 	color: white;
@@ -31,7 +31,8 @@ canvas{
 	top:  8vh;
 } 
 span{
-	font-size: 5vh ;
+	font-family: "Consolas";
+	font-size: 2vmin ;
 	color:yellow;
 }
 </style>
@@ -390,15 +391,15 @@ var aspectRatio,
  
 function initWorld(width,height){
 	 
-	aspectRatio = can.height *1.0/ can.width
-	World.width = width
-	World.height = height
-	World.hWidth = width/2
+	aspectRatio   = can.height *1.0/ can.width
+	World.width   = width
+	World.height  = height
+	World.hWidth  = width/2
 	World.hHeight = height/2
 	Camera.x = 0
 	Camera.y = 0
 	Camera.w = 0.2
-	Camera.h = Camera.w * aspectRatio
+	Camera.h = Camera.w * aspectRatio 
 	Camera.maxX = World.hWidth  - 1
 	Camera.maxY = World.hHeight - aspectRatio
 }
@@ -649,9 +650,9 @@ const bombas = []
 	const txPos=[
 	    [0,0,0.25,0.25],
 		[0.25,0,0.5,0.25],
-		[0,0.25,0.25,0.5],
-		[0.5,0,1,0.5],
-		[0.25,0.25,0.5,0.5],
+		[0,0.25,0.25,0.499955],
+		[0.5001,0,1,0.5],
+		[0.25,0.25,0.5,0.49995],
 		[0.25,0.5,0.5,0.75]
 	]	
 	
@@ -939,10 +940,11 @@ function drawScene (time){
         
         //-- stats --
         if(animOn){ 
-			results.innerHTML ="fps:"+ Math.round(1.0/(dt+0.0001));
-			results1.innerHTML="sprites:"+vNum/6
-			results1.innerHTML+="<br>life:"+playerLife
-            results1.innerHTML+="<br>monsters:"+monNum
+			results.innerHTML ="fps:"+ Math.round(1.0/(dt+0.0001))
+			    +"<br>sprites:"+vNum/6
+				+"<br>life:"+playerLife
+				+"<br>monsters:"+monNum
+				+"<br>[p] or [2fingers]:pause/resume<br>[t] or [3fingers]:hide/show text<br>"
             requestAnimationFrame(drawScene);
         }else results.innerHTML="Click To Start";
 		
