@@ -884,16 +884,8 @@ function drawScene (time){
 				mon.ax = (player.x-mon.x)*dt*32/(1+d)
 				mon.ay = (player.y-mon.y)*dt*32/(1+d)
 			}
-			else 
-			for(let i=k+1;i<monsters.length;i++)
-			{
-				let other = monsters[i]
-				let d = mon.distTo(other)
-				if(d<0.4){
-					mon.ax+= -(other.x-mon.x)*dt*20.0*(0.4-d)/(0.1+d)
-					mon.ay+= -(other.y-mon.y)*dt*20.0*(0.4-d)/(0.1+d)
-				}
-			}
+			
+			
 			 
 			mon.vx+=mon.ax*dt
 			mon.vy+=mon.ay*dt
