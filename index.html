@@ -50,33 +50,40 @@ span{
 <script>let things=
 {
 	player:
-		{x:0.39,y:-2.67,w:0.12,h:0.18},
+		{x:0.81,y:0.54,w:0.1,h:0.18},
 	boxes:[
-		{x:-1.77,y:0.54,w:0.36,h:2.45},
-		{x:0.84,y:-1.53,w:1.45,h:0.38},
-		{x:0.9,y:0.93,w:1.39,h:1.17},
+		{x:0.33,y:0.99,w:2.64,h:0.22},
+		{x:-1.41,y:1.77,w:0.11,h:0.53},
+		{x:-0.3,y:1.74,w:0.1,h:0.52},
+		{x:0.54,y:2.46,w:0.11,h:0.55},
+		{x:1.59,y:2.49,w:0.08,h:0.52},
+		{x:2.31,y:1.74,w:0.14,h:0.5},
+		{x:-0.15,y:-0.63,w:2.2,h:0.18},
+		{x:-2.22,y:0.21,w:0.08,h:0.65},
+		 
 	],
 	monsters:[
-		{x:-2.37,y:2.52,w:0.12,h:0.23},
-		{x:-2.64,y:1.38,w:0.12,h:0.23},
-		{x:-2.4,y:0.51,w:0.14,h:0.23},
-		{x:-2.43,y:1.89,w:0.12,h:0.18},
-		{x:-2.58,y:-0.36,w:0.06,h:0.12},
-		{x:-2.46,y:-0.84,w:0.06,h:0.08},
-		{x:-2.67,y:-1.35,w:0.06,h:0.08},
-		{x:-1.59,y:-2.52,w:0.15,h:0.23},
-		{x:-0.9,y:-0.63,w:0.17,h:0.28},
+		{x:2.7,y:1.59,w:0.1,h:0.15},
+		{x:1.92,y:2.4,w:0.06,h:0.13},
+		{x:1.23,y:1.41,w:0.11,h:0.13},
+		{x:0.09,y:2.04,w:0.08,h:0.17},
+		{x:-0.81,y:1.74,w:0.12,h:0.13},
+		{x:-1.92,y:-1.35,w:0.11,h:0.18},
+		{x:-1.56,y:-1.26,w:0.09,h:0.17},
+		{x:-2.61,y:1.71,w:0.2,h:0.38},
 	],
 	greenMonsters:[
-		{x:-1.11,y:1.23,w:0.1,h:0.18},
-		{x:-2.4,y:-1.98,w:0.05,h:0.1},
-		{x:-2.73,y:-0.81,w:0.07,h:0.1},
-		{x:-2.58,y:1.02,w:0.13,h:0.25},
-		{x:-2.37,y:-2.49,w:0.13,h:0.15},
-		{x:-0.15,y:-0.81,w:0.13,h:0.18},
+		{x:2.55,y:2.58,w:0.09,h:0.13},
+		{x:1.86,y:1.53,w:0.08,h:0.13},
+		{x:1.08,y:2.28,w:0.08,h:0.13},
+		{x:-0.42,y:2.73,w:0.11,h:0.15},
+		{x:-1.11,y:2.04,w:0.08,h:0.15},
+		{x:-1.2,y:-1.47,w:0.11,h:0.17},
+		{x:-1.8,y:-1.86,w:0.13,h:0.18},
+		{x:0.69,y:-1.98,w:0.32,h:0.45},
 	],
 	bombas:[
-		{x:2.7,y:2.37,w:0.11,h:0.2},
+		{x:-0.99,y:0.24,w:0.1,h:0.23},
 	],
 }
 //--------------------------
@@ -153,7 +160,7 @@ var snd = makeSound(500)
 
 var isPlaying = false
 
-var sndBom = [makeBom(69000,0.999),makeBom(69000,0.9999,660),makeBom(69000,0.999,460),]
+var sndBom = [makeBom(69000,0.9999,400),makeBom(69000,0.9999,950),makeBom(69000,0.9999,660),makeBom(69000,0.999,460),]
 
 function makeBom(N=8000,g=0.96,L=400){
 	
@@ -167,7 +174,7 @@ function makeBom(N=8000,g=0.96,L=400){
 	for(let k=0;k<snd.length;k++,a*=g,lop+=0.06-0.1*lop)
 	{
 		v = v*lop+(1-lop)* a  * rnd()
-		snd[k] = (1-k*d)*v-0.9*(k>L?snd[k-L]:0)
+		snd[k] = (1-k*d)*v-0.9*(k>L?snd[k-rndInt(0.95*L,L)]:0)
 	}
 	
 	return snd
@@ -415,8 +422,8 @@ function updateCamera(player)
 	if(player.y-Camera.y>Camera.h)
 		Camera.y=player.y-Camera.h
 	else
-	if(player.y-Camera.y<-Camera.h)
-		Camera.y=player.y+Camera.h
+	if(player.y-Camera.y<-Camera.h/2)
+		Camera.y=player.y+Camera.h/2
 	
 	Camera.x = sat( Camera.x, -Camera.maxX,Camera.maxX)
 	Camera.y = sat( Camera.y, -Camera.maxY,Camera.maxY)
@@ -451,6 +458,18 @@ function Sprite(x,y,w,h,tx){
 	
 	this.speed=function(){
 		return Math.sqrt(this.vx*this.vx+this.vy*this.vy)
+	}
+	
+	this.flipH=function(dir){
+		let i=Math.min(this.tx[1],this.tx[3])
+		let j=Math.max(this.tx[1],this.tx[3])
+		if(dir<0){
+			this.tx[1]=i
+			this.tx[3]=j
+		}else{
+			this.tx[1]=j
+			this.tx[3]=i
+		}
 	}
 	
 	//----------------------------------------------
@@ -580,6 +599,7 @@ function updateSparks(){
 		p.color[2]=rnd(0.5,1)
 		p.x =q.x+ rnd(0.051)
 		p.y =q.y+ rnd(0.051)
+		p.flipH(rnd())
 		addSpriteToBuf(p,rnd(0.5,1),rnd(0.5,1),rnd(Math.PI))
 		
 		}
@@ -725,7 +745,7 @@ window.addEventListener('touchstart',
 
 var playerLife = 1000
 var animOn = false 
-var then , prevSnd=0  
+var then=undefined, prevSnd=0  
 
 var player
 var backgroundSp
@@ -880,12 +900,12 @@ function drawScene (time){
 			let r =  0.1+0.01*k
 			if(rndDecide(0.3))
 			{ 
+				let rn =rnd(0.4,1.6)
 				let d = mon.distTo(player)
-				mon.ax = (player.x-mon.x)*dt*32/(1+d)
-				mon.ay = (player.y-mon.y)*dt*32/(1+d)
+				mon.ax = rn*(player.x-mon.x)*dt*32/(1+d)
+				mon.ay = rn*(player.y-mon.y)*dt*32/(1+d)
 			}
-			
-			
+			 
 			 
 			mon.vx+=mon.ax*dt
 			mon.vy+=mon.ay*dt
@@ -922,7 +942,7 @@ function drawScene (time){
 			addSpriteToBuf(bom,sclx,scly)
 		}
 		
-		//-- update reen Monsters ---
+		//-- update green Monsters ---
 		for(let k=0;k<greenMonsters.length;k++)
 		{
 			let mon = greenMonsters[k]
@@ -944,21 +964,12 @@ function drawScene (time){
 			let r =  0.1+0.01*k
 			if(rndDecide(0.3))
 			{ 
+				let rn =rnd(0.4,1.6)
 				let d = mon.distTo(player)
-				mon.ax= (player.x-mon.x)*dt*32/(1+d)
-				mon.ay= (player.y-mon.y)*dt*32/(1+d)
+				mon.ax= rn*(player.x-mon.x)*dt*32/(1+d)
+				mon.ay= rn*(player.y-mon.y)*dt*32/(1+d)
 			}
-			else 
-			for(let i=k+1;i<greenMonsters.length;i++)
-			{
-				let other = greenMonsters[i]
-				let d = mon.distTo(other)
-				if(d<0.4)
-				{
-					mon.ax+= -(other.x-mon.x)*dt*20.0*(0.4-d)/(0.1+d)
-					mon.ay+= -(other.y-mon.y)*dt*20.0*(0.4-d)/(0.1+d)
-				}
-			}
+			 
 			 
 			mon.vx+=mon.ax*dt
 			mon.vy+=mon.ay*dt
@@ -989,17 +1000,21 @@ function drawScene (time){
 		}
 		
 		//-- update player 
-		if(Mouse.btn>0.06){
-			player.vx =  15*(  Mouse.x-player.x  )
-			player.vy =  15*(  Mouse.y-player.y  )
-			Mouse.btn *=0.99999
-		}else{
-		 player.vx  += dt*(Key.right-Key.left) 
-		 player.vy  += dt*(Key.up-Key.down) 
+		if(Mouse.btn>0.26){
+			player.vx  =  5* (  Mouse.x-player.x  )
+			player.vy  =   5* (  Mouse.y-player.y  )
+			Mouse.btn *=0.999
 		}
+		 player.vx  +=  14* (Key.right-Key.left) 
+		 player.vy  +=  14* (Key.up-Key.down) 
+		
 		 
 		const maxV = 3.0
 		let v = player.speed()
+			if(v>1){
+			player.vx *= 0.993 
+			player.vy *= 0.993 
+			}
 			if(v>maxV){
 				v=maxV/v
 				player.vx *=v
@@ -1007,27 +1022,14 @@ function drawScene (time){
 			}
 			player.th =  Math.PI+ Math.atan2(player.vy,player.vx)  
 			
-			let i=player.tx[1]
-			let j=player.tx[3]
-			
-			  
-			if(player.vx>= 0){
-				player.tx[1]=Math.max(i,j)
-				player.tx[3]=Math.min(i,j)
-			}else
-				if(player.vx<0)
-			{
-				player.tx[3]=Math.max(i,j)
-				player.tx[1]=Math.min(i,j)
-			}
+			player.flipH(player.vx)
 			 
 			let newx = player.x +  dt * player.vx
 			let newy = player.y +  dt * player.vy
 			
 			player.checkCollision(newx,newy)
 			 
-			player.vx *= 0.99993 
-			player.vy *= 0.99993 
+			
 			const th = time * 0.009
 			const tt = 1.0+0.2*Math.sin(th )
 			addSpriteToBuf(player,tt,1/tt,0)
@@ -1070,7 +1072,7 @@ document.body.onload = function(){
 	let waitmessage = document.getElementById('waitmessage')
 	document.body.removeChild(waitmessage)
 	initGL()
-	initData()  
-	startAnim()
+	initData() 
+    startAnim() 
 }
 </script></body></html>
