@@ -50,9 +50,7 @@ span{
 </style>
 </head>
 <body>
-   <audio id="musicSad" src="./assets/sad.wav"></audio>
-   <audio id="musicHappy" src="./assets/happy.wav"></audio>
-   <h1 id="waitmessage"> LOADING PLEASE WAIT ...</h1> 
+    <h1 id="waitmessage"> LOADING PLEASE WAIT ...</h1> 
 		<div id="container">
 			<canvas id="can" width="640" height="360"  ></canvas>
 			<div id="trackers">
@@ -820,15 +818,7 @@ var averageFPS = 60.0
 	
 // ** Init Globals
 function initData(){
-	if(musicHappy){
-		musicHappy.pause()
-		musicHappy.fastSeek(0) 
-	}
-	if(musicSad)
-	{
-		musicSad.pause()
-		musicSad.fastSeek(0) 
-	}
+
 	initWorld(6,6)	
 	
 	gameEnded = false
@@ -939,7 +929,7 @@ function drawScene (){
 		const p = new Sprite(0,-0.3+0.01*Math.sin(time*0.00690),1.8,1.8*16.0/9.0,[0.5,0,1,0.5])
 		 if(!gameEnded){
 			 gameEnded = true
-			 musicSad.play()
+			// musicSad.play()
 		 }
 		Camera.x=0
 		Camera.y=0
@@ -958,7 +948,7 @@ function drawScene (){
 		const p = new Sprite(0,-0.3+0.01*Math.sin(time*0.00690),2,32.0/9.0,[0.75,0.5,1,0.75])
 		 if(!gameEnded){
 			 gameEnded = true
-			 musicHappy.play()
+			// musicHappy.play()
 		 }
 		Camera.x=0
 		Camera.y=0
