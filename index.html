@@ -295,6 +295,25 @@ const vArr= new Float32Array(MAX_VERTEX_NUM * 2)
 const cArr= new Float32Array(MAX_VERTEX_NUM * 4)
 const tArr= new Float32Array(MAX_VERTEX_NUM * 2)
 
+
+ window.onresize = function(){
+	const w = window.innerWidth
+	const h = window.innerHeight
+	const ratio = 9.0/16.0
+	if(w*ratio<h){
+		can.height = h
+		can.width = h/ratio
+	}else {
+		can.width = w
+		can.height = w*ratio
+	}	
+	ctx.viewport(0,0,can.width,can.height);
+		
+	console.log("can: w="+can.width+"  h:"+can.height)
+}
+			
+	 
+	 
 	 function setUnif(name,value){
 		let loc = ctx.getUniformLocation(prog,name)
 		ctx.uniform1f(loc,value)
@@ -340,7 +359,8 @@ const tArr= new Float32Array(MAX_VERTEX_NUM * 2)
 		console.log("error compiling shaders!");
 		return;
 		}
-		ctx.viewport(0,0,ctx.canvas.width,ctx.canvas.height);
+		//ctx.viewport(0,0,ctx.canvas.width,ctx.canvas.height);
+		ctx.viewport(0,0,can.width,can.height);
 		ctx.useProgram(prog);
 		//------- create buffers & texture
 	    vbuf = newBuffer("a_Position",2); // 2 coordinates per vertex
@@ -618,16 +638,16 @@ function updateSparks(){
 function startExplosion(sp){
 	
 	
-	for(let k=0;k<10;k++){
+	for(let k=0;k<40;k++){
 		let p = new Sprite(sp.x, sp.y, 
-	                  0.2*sp.width, 0.2*sp.height, 
+	                  0.1*sp.width, 0.1*sp.height, 
 					  [])
 		let a = sp.tx[0]
 		let b = sp.tx[1]
 		let aa = sp.tx[2]
 		let bb = sp.tx[3]
-		p.tx=[a+0.5*rnd(0.01,aa-a),b+0.5*rnd(0.01,bb-b),
-		      aa-0.5*rnd(0.01,aa-a),bb-0.5*rnd(0.01,bb-b)]
+		p.tx=[rnd(a,0.5*(aa+a)),rnd(b,0.5*(bb+b)),
+		      rnd(0.5*(aa+a),aa),rnd(0.5*(bb+b),bb)]
 		p.color=[1,1,1,1]
 		p.vx=0.51*rnd()
 		p.vy=0.51*rnd()
@@ -666,7 +686,7 @@ var Mouse ={
 
   
 window.addEventListener('mousedown',function(e){
-  fullScreen()
+  if(e.button==2)fullScreen()
   if(!animOn){
 		
 		startAnim()
@@ -736,7 +756,7 @@ window.addEventListener('keyup',
 window.addEventListener('touchstart',
   
   function(e){
-	  //if(!animOn)fullScreen( )
+	if(!animOn)fullScreen( )
 	switch(e.touches.length){
 		case 2: togleAnim()
 		break
@@ -1050,8 +1070,8 @@ function drawScene (time){
 			    +"<br>sprites:"+vNum/6
 				+"<br>life:"+playerLife
 				+"<br>monsters:"+monNum
-				+"<br>[p] or [2fingers]:pause/resume<br>[t] or [3fingers]:hide/show text<br>"
-				+"<br>btn:"+Mouse.btn
+				+"<br>[p] or [2fingers]:pause/resume<br>[t] or [3fingers]:hide/show text"
+				+"<br> right click : full screen"
             requestAnimationFrame(drawScene);
         }else results.innerHTML="Click To Start";
 		
