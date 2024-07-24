@@ -22,8 +22,8 @@ canvas{
 }
 #results {
 	position: absolute;
-	left: 2vw;
-	top:  2vh;	
+	left: 5vw;
+	top:  5vh;	
 	user-select: none;
 }
 #results1 {
@@ -32,7 +32,9 @@ canvas{
 	top:  10%;
 	width: 80%;
 	font-size:4vmin;
+	font-style:italic;
 	color:white;
+	font-family: "Gothic";
 	background:#50404040;
 	cursor:pointer;
 	text-align:center;
@@ -40,7 +42,7 @@ canvas{
 } 
 span{
 	font-family: "Consolas";
-	font-size: 2vmin ;
+	font-size: 3vmin ;
 	color:yellow;
 	cursor:default;
 	user-select: none;
@@ -48,9 +50,11 @@ span{
 </style>
 </head>
 <body>
+   <audio id="musicSad" src="./assets/sad.wav"></audio>
+   <audio id="musicHappy" src="./assets/happy.wav"></audio>
    <h1 id="waitmessage"> LOADING PLEASE WAIT ...</h1> 
 		<div id="container">
-			<canvas id="can" width="320" height="180"  ></canvas>
+			<canvas id="can" width="640" height="360"  ></canvas>
 			<div id="trackers">
 				<span id="results"></span>
 				<span id="results1"></span>
@@ -306,21 +310,21 @@ const cArr= new Float32Array(MAX_VERTEX_NUM * 4)
 const tArr= new Float32Array(MAX_VERTEX_NUM * 2)
 
 
- window.onresize = function(){
-	const w = window.innerWidth
-	const h = window.innerHeight
-	const ratio = 9.0/16.0
-	if(w*ratio<h){
-		can.height = h
-		can.width = h/ratio
-	}else {
-		can.width = w
-		can.height = w*ratio
-	}	
-	ctx.viewport(0,0,can.width,can.height);
+ // window.onresize = function(){
+	// const w = window.innerWidth
+	// const h = window.innerHeight
+	// const ratio = 9.0/16.0
+	// if(w*ratio<h){
+		// can.height = h
+		// can.width = h/ratio
+	// }else {
+		// can.width = w
+		// can.height = w*ratio
+	// }	
+	// ctx.viewport(0,0,can.width,can.height);
 		
-	console.log("can: w="+can.width+"  h:"+can.height)
-}
+	// console.log("can: w="+can.width+"  h:"+can.height)
+// }
 			
 	 
 	 
@@ -376,7 +380,7 @@ const tArr= new Float32Array(MAX_VERTEX_NUM * 2)
 	    vbuf = newBuffer("a_Position",2); // 2 coordinates per vertex
 	    cbuf = newBuffer("color",4);      // 4 color components per vertex
 	    tbuf = newBuffer("texco",2);      // 2 texture coordinates per vertex		
-	
+		
 	}
 
 	//--------------------------------
@@ -439,6 +443,8 @@ function initWorld(width,height){
 	Camera.h = Camera.w * aspectRatio 
 	Camera.maxX = World.hWidth  - 1
 	Camera.maxY = World.hHeight - aspectRatio
+	
+	
 }
 
 function updateCamera(player)
@@ -793,14 +799,14 @@ var playerLife = 10
 var monNum = undefined
 var gameEnded = false
 var animOn = false 
-var then=undefined, prevSnd=0  
+var then = -1, prevSnd=0  
 
 var player
 var backgroundSp
 var monsters  
 var greenMonsters  
 var bombas  
- 
+var averageFPS = 60.0 
 
 //-- sprite sheet divisions
 	const txPos=[
@@ -814,16 +820,26 @@ var bombas
 	
 // ** Init Globals
 function initData(){
-	
+	if(musicHappy){
+		musicHappy.pause()
+		musicHappy.fastSeek(0) 
+	}
+	if(musicSad)
+	{
+		musicSad.pause()
+		musicSad.fastSeek(0) 
+	}
 	initWorld(6,6)	
-	newTex(image);
+	
 	gameEnded = false
 	playerLife = 10
-	results1.innerHTML=""
+	results1.innerHTML="";
+	then=-1
 	monNum = undefined
 	 monsters = []
 	 greenMonsters = []
 	 bombas = []	
+	 CollisionBlocks =[]
 	
 	//-- create player sprite
 	player = new Sprite(  things.player.x,things.player.y,
@@ -910,15 +926,21 @@ function drawScene (){
 	  
 	  if(!animOn)return
 	  
-	  if(then==undefined){
-		  then=Date.now()
+	  if(then<0){
+		  then=performance.now()
+		  
 		  requestAnimationFrame(drawScene)
 		  return
 	  }
-	  let time = Date.now() 
+	  let time = performance.now()
+
+	  //-- detect failure
 	  if(playerLife<=0){
 		const p = new Sprite(0,-0.3+0.01*Math.sin(time*0.00690),1.8,1.8*16.0/9.0,[0.5,0,1,0.5])
-		gameEnded = true
+		 if(!gameEnded){
+			 gameEnded = true
+			 musicSad.play()
+		 }
 		Camera.x=0
 		Camera.y=0
 		p.th=0
@@ -926,7 +948,7 @@ function drawScene (){
 		addSpriteToBuf(p,sclx,1.0/sclx,sclx*0.1)
 		drawAll()
 		results.innerHTML=""
-		results1.innerHTML="you were cooked by monsters! <br>They are having a nice meal now !<br>Double click here to restart game"
+		results1.innerHTML="Monsters are having a nice meal now!<br>You are the meal!!<br>Double click here to restart game"
 		showElement(trackers)
 		requestAnimationFrame(drawScene)
 		return
@@ -934,7 +956,10 @@ function drawScene (){
 	  //-- detect success ---
 	  if((monNum!=undefined)&&monNum<=0){
 		const p = new Sprite(0,-0.3+0.01*Math.sin(time*0.00690),2,32.0/9.0,[0.75,0.5,1,0.75])
-		gameEnded = true
+		 if(!gameEnded){
+			 gameEnded = true
+			 musicHappy.play()
+		 }
 		Camera.x=0
 		Camera.y=0
 		p.th=0
@@ -942,17 +967,22 @@ function drawScene (){
 		addSpriteToBuf(p,sclx,1.0/sclx,sclx*0.1)
 		drawAll()
 		results.innerHTML=""
-		results1.innerHTML="Congratulations!!<br> You killed all monsters !<br>Double click here to restart game"
+		results1.innerHTML="Congratulations!!<br> You fried all monsters !<br>You are considered a hero by all sea creatures.<br>Double click here to restart game"
 		showElement(trackers)
 		requestAnimationFrame(drawScene)
 		return
 	  }
 	  
 	  
-	  var dt = 0.001*(time-then)
-	  dt=sat(dt,1.0/90,1.0/40)
+	  const dt = 0.001*(time-then)
+	  
+	  if(dt<1.0/120.0){
+			requestAnimationFrame(drawScene)		  
+		return
+	  }
+	  
 	  then=time;
-		 
+	     
 		
 		updateCamera(player)
 		setUnif('X',Camera.x)
@@ -1130,9 +1160,16 @@ function drawScene (){
 		updateSparks()
 		explosionsUpdate(dt)	
         
+		
+		
+		
+			
+		averageFPS = 0.9*averageFPS +0.1/dt
+		
         //-- stats --
         if(animOn){ 
-			results.innerHTML ="fps:"+ Math.round(1.0/(dt+0.0001))
+		 
+			results.innerHTML ="fps:"+Math.round(averageFPS)
 			    +"<br>sprites:"+vNum/6
 				+"<br>life:"+playerLife
 				+"<br>monsters:"+monNum
@@ -1147,12 +1184,13 @@ function drawScene (){
 
 function startAnim(){
 	animOn=true
+	then=-1
 	requestAnimationFrame(drawScene)
 }
 
 function pauseAnim(){
 	animOn=false
-	then=undefined
+	then=-1
 }
 
 function togleAnim(){
@@ -1166,6 +1204,7 @@ document.body.onload = function(){
 	document.body.removeChild(waitmessage)
 	trackers.onclick="";
 	initGL()
+	newTex(image);
 	initData() 
     startAnim() 
 }
