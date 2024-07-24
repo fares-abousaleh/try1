@@ -24,16 +24,26 @@ canvas{
 	position: absolute;
 	left: 2vw;
 	top:  2vh;	
+	user-select: none;
 }
 #results1 {
 	position: absolute;
-	left: 2vw;
-	top:  8vh;
+	left: 10%;
+	top:  10%;
+	width: 80%;
+	font-size:4vmin;
+	color:white;
+	background:#30404040;
+	cursor:pointer;
+	text-align:center;
+	user-select: none;
 } 
 span{
 	font-family: "Consolas";
 	font-size: 2vmin ;
 	color:yellow;
+	cursor:default;
+	user-select: none;
 }
 </style>
 </head>
@@ -771,7 +781,7 @@ window.addEventListener('touchstart',
   }
  )
  
- window.addEventListener('dblclick',function(){
+ results1.addEventListener('dblclick',function(){
 	if(gameEnded){
 		initData()
 		startAnim()
@@ -809,6 +819,7 @@ function initData(){
 	newTex(image);
 	gameEnded = false
 	playerLife = 10
+	results1.innerHTML=""
 	monNum = undefined
 	 monsters = []
 	 greenMonsters = []
@@ -913,7 +924,8 @@ function drawScene (){
 		p.th=0
 		addSpriteToBuf(p)
 		drawAll()
-		results.innerHTML="you were cooked by monsters and they ate you!<br>double click to restart game"
+		results.innerHTML=""
+		results1.innerHTML="you were cooked by monsters and they ate you!<br>Double click to restart game"
 		showElement(trackers)
 		return
 	  }
@@ -926,7 +938,8 @@ function drawScene (){
 		p.th=0
 		addSpriteToBuf(p)
 		drawAll()
-		results.innerHTML="Congratulations!!<br> You killed all monsters !<br>double click to restart game"
+		results.innerHTML=""
+		results1.innerHTML="Congratulations!!<br> You killed all monsters !<br>Double click to restart game"
 		showElement(trackers)
 		return
 	  }
@@ -1147,6 +1160,7 @@ function togleAnim(){
 document.body.onload = function(){
 	let waitmessage = document.getElementById('waitmessage')
 	document.body.removeChild(waitmessage)
+	trackers.onclick="";
 	initGL()
 	initData() 
     startAnim() 
