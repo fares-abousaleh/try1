@@ -483,7 +483,7 @@ function Sprite(x,y,w,h,tx){
 		
 		const  sx = Math.sign(this.vx)
 		const  sy = Math.sign(this.vy)
-		const eps = 0.001
+		const eps = 0.0001
 		
 		//-- collisions with blocks
 		for(let i=0;i<CollisionBlocks.length;i++){
@@ -491,7 +491,7 @@ function Sprite(x,y,w,h,tx){
 			
 		    if(sx!=0&&intersectRects(rh,c)) 
 				rh.x = c.x-sx*(eps+c.w+this.w)
-			 
+			else 
 			if(sy!=0&&intersectRects(rv,c)) 
 				rv.y = c.y-sy*(eps+c.h+this.h)
 		}
@@ -506,7 +506,8 @@ function Sprite(x,y,w,h,tx){
 		if(newy+this.h>World.hHeight||newy-this.h<-World.hHeight)
 				newy = sy * (World.hHeight-this.h-eps)
 			
-		//-- assign new position		
+		//-- assign new position
+				
 		this.x= newx
 		this.y= newy
 	}
@@ -662,8 +663,10 @@ var Mouse ={
 	x:0,y:0,btn:0
 }
 
-function onMouse(e){
-  fullScreen()
+
+  
+window.addEventListener('mousedown',function(e){
+  //fullScreen()
   if(!animOn){
 		
 		startAnim()
@@ -677,18 +680,19 @@ function onMouse(e){
 	Mouse.y=  can.clientHeight* 1.0/can.clientWidth -(e.y-can.offsetTop) * 2.0/can.clientWidth 
 	Mouse.x += Camera.x
 	Mouse.y += Camera.y
-	Mouse.btn += 1
+	Mouse.btn  = 1.0
 	 
 	
-  }
-  
-window.addEventListener('mousedown',onMouse)
+  })
  
 var Key={
 	left:0,
 	right:0,
 	up:0,
-	down:0
+	down:0,
+	pressed:function(){
+		return Key.up+Key.down+Key.left+Key.right
+	},
 	
 }
 
@@ -732,7 +736,7 @@ window.addEventListener('keyup',
 window.addEventListener('touchstart',
   
   function(e){
-	  if(!animOn)fullScreen( )
+	  //if(!animOn)fullScreen( )
 	switch(e.touches.length){
 		case 2: togleAnim()
 		break
@@ -902,8 +906,8 @@ function drawScene (time){
 			{ 
 				let rn =rnd(0.4,1.6)
 				let d = mon.distTo(player)
-				mon.ax = rn*(player.x-mon.x)*dt*32/(1+d)
-				mon.ay = rn*(player.y-mon.y)*dt*32/(1+d)
+				mon.ax = rn*(player.x-mon.x)*dt*32/(0.01+d)
+				mon.ay = rn*(player.y-mon.y)*dt*32/(0.01+d)
 			}
 			 
 			 
@@ -966,8 +970,8 @@ function drawScene (time){
 			{ 
 				let rn =rnd(0.4,1.6)
 				let d = mon.distTo(player)
-				mon.ax= rn*(player.x-mon.x)*dt*32/(1+d)
-				mon.ay= rn*(player.y-mon.y)*dt*32/(1+d)
+				mon.ax= rn*(player.x-mon.x)*dt*32/(0.01+d)
+				mon.ay= rn*(player.y-mon.y)*dt*32/(0.01+d)
 			}
 			 
 			 
@@ -1000,27 +1004,29 @@ function drawScene (time){
 		}
 		
 		//-- update player 
-		if(Mouse.btn>0.26){
+		if(Mouse.btn>0){
 			player.vx  =  5* (  Mouse.x-player.x  )
 			player.vy  =   5* (  Mouse.y-player.y  )
-			Mouse.btn *=0.999
-		}
-		 player.vx  +=  14* (Key.right-Key.left) 
-		 player.vy  +=  14* (Key.up-Key.down) 
-		
-		 
+			Mouse.btn -=  0.2*dt
+		} 
+		 if(Key.pressed()){
+			 Mouse.btn =0
+			 player.vx   =  10* (Key.right-Key.left) 
+			 player.vy   =  10* (Key.up-Key.down) 
+		 }
 		const maxV = 3.0
 		let v = player.speed()
-			if(v>1){
-			player.vx *= 0.993 
-			player.vy *= 0.993 
-			}
+			
 			if(v>maxV){
 				v=maxV/v
 				player.vx *=v
 				player.vy *=v
 			}
-			player.th =  Math.PI+ Math.atan2(player.vy,player.vx)  
+		const gv = Math.exp(-5*dt)
+		player.vx  *= gv 
+		 player.vy  *= gv
+		
+		player.th =  Math.PI+ Math.atan2(player.vy,player.vx)  
 			
 			player.flipH(player.vx)
 			 
@@ -1045,6 +1051,7 @@ function drawScene (time){
 				+"<br>life:"+playerLife
 				+"<br>monsters:"+monNum
 				+"<br>[p] or [2fingers]:pause/resume<br>[t] or [3fingers]:hide/show text<br>"
+				+"<br>btn:"+Mouse.btn
             requestAnimationFrame(drawScene);
         }else results.innerHTML="Click To Start";
 		
