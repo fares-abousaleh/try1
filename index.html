@@ -33,7 +33,7 @@ canvas{
 	width: 80%;
 	font-size:4vmin;
 	color:white;
-	background:#30404040;
+	background:#50404040;
 	cursor:pointer;
 	text-align:center;
 	user-select: none;
@@ -915,36 +915,40 @@ function drawScene (){
 		  requestAnimationFrame(drawScene)
 		  return
 	  }
-	  
-	  if(playerLife<=0){
-		const p = new Sprite(0,0,2,32.0/9.0,[0.5,0,1,0.5])
-		gameEnded = true
-		Camera.x=0
-		Camera.y=0
-		p.th=0
-		addSpriteToBuf(p)
-		drawAll()
-		results.innerHTML=""
-		results1.innerHTML="you were cooked by monsters and they ate you!<br>Double click to restart game"
-		showElement(trackers)
-		return
-	  }
-	  
-	  if((monNum!=undefined)&&monNum<=0){
-		const p = new Sprite(0,0,2,32.0/9.0,[0.75,0.5,1,0.75])
-		gameEnded = true
-		Camera.x=0
-		Camera.y=0
-		p.th=0
-		addSpriteToBuf(p)
-		drawAll()
-		results.innerHTML=""
-		results1.innerHTML="Congratulations!!<br> You killed all monsters !<br>Double click to restart game"
-		showElement(trackers)
-		return
-	  }
-	  
 	  let time = Date.now() 
+	  if(playerLife<=0){
+		const p = new Sprite(0,-0.3+0.01*Math.sin(time*0.00690),1.8,1.8*16.0/9.0,[0.5,0,1,0.5])
+		gameEnded = true
+		Camera.x=0
+		Camera.y=0
+		p.th=0
+		let sclx =1.1+0.1*Math.sin(time*0.0050)
+		addSpriteToBuf(p,sclx,1.0/sclx,sclx*0.1)
+		drawAll()
+		results.innerHTML=""
+		results1.innerHTML="you were cooked by monsters! <br>They are having a nice meal now !<br>Double click here to restart game"
+		showElement(trackers)
+		requestAnimationFrame(drawScene)
+		return
+	  }
+	  //-- detect success ---
+	  if((monNum!=undefined)&&monNum<=0){
+		const p = new Sprite(0,-0.3+0.01*Math.sin(time*0.00690),2,32.0/9.0,[0.75,0.5,1,0.75])
+		gameEnded = true
+		Camera.x=0
+		Camera.y=0
+		p.th=0
+		let sclx =1.1+0.1*Math.sin(time*0.0050)
+		addSpriteToBuf(p,sclx,1.0/sclx,sclx*0.1)
+		drawAll()
+		results.innerHTML=""
+		results1.innerHTML="Congratulations!!<br> You killed all monsters !<br>Double click here to restart game"
+		showElement(trackers)
+		requestAnimationFrame(drawScene)
+		return
+	  }
+	  
+	  
 	  var dt = 0.001*(time-then)
 	  dt=sat(dt,1.0/90,1.0/40)
 	  then=time;
