@@ -59,7 +59,7 @@ function makeSound(fr){
 
 function initAudio(){
 	if(!audio_context) audio_context = new AudioContext();
-} 
+}  
 
-const musicSad = document.getElementById("musicSad")
-const musicHappy = document.getElementById("musicHappy")
+const musicSad =  new Audio("./assets/musicSad.wav")
+const musicHappy = new Audio("./assets/musicHappy.wav")
