@@ -149,7 +149,7 @@ function drawScene (){
 		const p = new Sprite(0,-0.3+0.01*Math.sin(time*0.00690),1.8,1.8*16.0/9.0,[0.5,0,1,0.5])
 		 if(!gameEnded){
 			 gameEnded = true
-			  musicSad.play()
+			 if(musicSad) musicSad.play()
 		 }
 		Camera.x=0
 		Camera.y=0
@@ -170,7 +170,7 @@ function drawScene (){
 			 gameEnded = true
 			 curLevel++
 		     curLevel%=levels.length
-			  musicHappy.play()
+			 if(musicHappy) musicHappy.play()
 		 }
 		Camera.x=0
 		Camera.y=0
