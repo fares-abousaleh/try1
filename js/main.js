@@ -398,13 +398,14 @@ function togleAnim(){
 	if(animOn)pauseAnim()
 	else startAnim()
 }
-
+musicSad.onload=function(){
+	alert("music loaded")
+}
 //--- main entry 
 document.body.onload = function(){
 	let waitmessage = document.getElementById('waitmessage')
 	document.body.removeChild(waitmessage)
-	trackers.onclick="";
-	trackers.onclick=undefined
+	 
 	initGL()
 	newTex(image);
 	initData() 
