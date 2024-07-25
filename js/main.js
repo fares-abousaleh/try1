@@ -25,15 +25,8 @@ var averageFPS = 60.0
 	
 // ** Init Globals
 function initData(){
-	if(musicHappy){
-		musicHappy.pause()
-		musicHappy.fastSeek(0) 
-	}
-	if(musicSad)
-	{
-		musicSad.pause()
-		musicSad.fastSeek(0) 
-	}
+	 
+	 
 	initWorld(6,6)	
 	
 	gameEnded = false
@@ -147,7 +140,7 @@ function drawScene (){
 		const p = new Sprite(0,-0.3+0.01*Math.sin(time*0.00690),1.8,1.8*16.0/9.0,[0.5,0,1,0.5])
 		 if(!gameEnded){
 			 gameEnded = true
-			 musicSad.play()
+			 
 		 }
 		Camera.x=0
 		Camera.y=0
@@ -166,7 +159,7 @@ function drawScene (){
 		const p = new Sprite(0,-0.3+0.01*Math.sin(time*0.00690),2,32.0/9.0,[0.75,0.5,1,0.75])
 		 if(!gameEnded){
 			 gameEnded = true
-			 musicHappy.play()
+			 
 		 }
 		Camera.x=0
 		Camera.y=0
